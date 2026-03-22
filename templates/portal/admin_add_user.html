@@ -1,0 +1,66 @@
+{% extends "portal/_layout.html" %}
+{#
+  Template: templates/portal/admin_add_user.html
+  Objetivo: Tela do portal: admin add user.
+  Herda: portal/_layout.html.
+  Blocos: content, menu, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}ADMIN • Adicionar usuário{% endblock %}
+
+{% block menu %}
+  <a href="{% url 'admin_dashboard' %}">Dashboard</a>
+  <a href="{% url 'admin_add_user' %}">Adicionar usuário</a>
+{% endblock %}
+
+{% block content %}
+  <h2 style="margin:0 0 10px;">Adicionar usuário</h2>
+  <p style="margin:0 0 16px; color:#6b7280; font-weight:600;">
+    Por enquanto o login é por nome. Depois vamos trocar para e-mail mantendo o mesmo fluxo.
+  </p>
+
+  {% if erro %}
+    <div style="padding:10px 12px; border-radius:12px; background:#fff1f2; border:1px solid #fecdd3; color:#9f1239; font-weight:800; margin-bottom:12px;">
+      {{ erro }}
+    </div>
+  {% endif %}
+
+  {% if msg %}
+    <div style="padding:10px 12px; border-radius:12px; background:#ecfdf5; border:1px solid #bbf7d0; color:#065f46; font-weight:800; margin-bottom:12px;">
+      {{ msg }}
+    </div>
+  {% endif %}
+
+  <form method="post" style="display:grid; gap:12px; max-width:520px;">
+    {% csrf_token %}
+
+    <div>
+      <label style="font-weight:800;">Nome (depois será o e-mail)</label>
+      <input name="nome" placeholder="Ex.: Filipe" required
+             style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:12px;">
+    </div>
+
+    <div>
+      <label style="font-weight:800;">Perfil</label>
+      <select name="perfil" required
+              style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:12px;">
+        <option value="" selected disabled>Selecione...</option>
+        <option value="SOLICITANTE">Solicitante</option>
+        <option value="PROJETISTA">Projetista</option>
+      </select>
+    </div>
+
+    <div>
+      <label style="font-weight:800;">Senha</label>
+      <input name="senha" type="password" placeholder="Defina a senha" required
+             style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:12px;">
+    </div>
+
+    <button type="submit"
+            style="padding:12px 14px; border:0; border-radius:12px; cursor:pointer; font-weight:900; color:#fff;
+                   background:linear-gradient(90deg,#0b5d4b,#0e6f59);">
+      Criar usuário
+    </button>
+  </form>
+{% endblock %}
+

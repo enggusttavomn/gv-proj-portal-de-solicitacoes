@@ -1,0 +1,1099 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/admin_banco_de_dados.html
+  Objetivo: Tela do portal: admin banco de dados.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% load dict_utils %}
+{% block title %}GV_PROJ - Banco de dados{% endblock %}
+{% block body_class %}{% endblock %}
+
+{% block sidebar %}
+  {% include "portal/_sidebar_admin.html" %}
+{% endblock %}
+
+{% block content %}
+  <style>
+    .hero-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .hero-main{ min-width:0; }
+    .db-card{
+      min-width: 240px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 16px;
+      padding: 12px 14px;
+      color: #eaf2ef;
+    }
+    .db-title{
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      opacity: .85;
+    }
+    .db-engine{ font-size: 16px; font-weight: 800; margin-top: 4px; }
+    .db-status{
+      display:inline-flex;
+      align-items:center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      border: 1px solid rgba(255,255,255,.2);
+      background: rgba(15,23,42,.18);
+    }
+    .db-status.ok{
+      border-color: rgba(183,211,75,.6);
+      background: rgba(183,211,75,.18);
+    }
+    .db-status.err{
+      border-color: rgba(244,63,94,.45);
+      background: rgba(244,63,94,.18);
+      color: #ffe4e6;
+    }
+    .db-meta{ margin-top: 8px; font-size: 12px; opacity: .88; }
+    .db-error{ margin-top: 6px; font-size: 11px; opacity: .8; }
+    .action-msg{
+      margin-top:16px;
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:700;
+      border:1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.75);
+    }
+    .action-msg.success{
+      border-color: rgba(11,95,83,.35);
+      background: rgba(11,95,83,.08);
+    }
+    .action-msg.error{
+      border-color: rgba(244,63,94,.45);
+      background: rgba(244,63,94,.08);
+    }
+    .db-meta-row{
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 14px;
+      color: rgba(15, 23, 42, 0.75);
+    }
+    .db-meta-row strong{
+      font-size: 16px;
+      color: #0f172a;
+    }
+    .db-meta-pill{
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      background: rgba(15, 23, 42, 0.08);
+      color: #0b5f53;
+      text-transform: uppercase;
+    }
+    .filters{
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 18px;
+      background: rgba(255,255,255,.92);
+      display: grid;
+      gap: 16px;
+    }
+    .filters-row{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+    .filters .field label{
+      display:block;
+      font-size:12px;
+      font-weight:700;
+      color: #0f172a;
+      margin-bottom:6px;
+    }
+    .filters input,
+    .filters select{
+      width:100%;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid rgba(15,23,42,.12);
+      background:#fff;
+      font-size:13px;
+    }
+    .filters-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .btn{
+      padding:10px 16px;
+      border-radius:12px;
+      border:1px solid rgba(11,95,83,.35);
+      background: rgba(11,95,83,.92);
+      color:#fff;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .btn-ghost{
+      padding:10px 16px;
+      border-radius:12px;
+      border:1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.8);
+      text-decoration:none;
+      color: var(--text);
+      font-weight:700;
+    }
+    .table-wrap{ margin-top:16px; }
+    .table-wrap h3{ margin: 0 0 8px; }
+    .table-wrap[data-columns-ready="false"] table.data{
+      visibility:hidden;
+    }
+    .column-controls{
+      margin: 0;
+      border:1px solid rgba(15,23,42,.10);
+      border-radius:14px;
+      background: rgba(255,255,255,.85);
+      padding: 8px 10px;
+    }
+    .column-controls summary{
+      cursor:pointer;
+      font-weight:800;
+      color:var(--text);
+      list-style:none;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: rgba(11,95,83,.06);
+      border: 1px solid rgba(11,95,83,.18);
+      position: relative;
+    }
+    .column-controls summary::-webkit-details-marker{ display:none; }
+    .column-controls summary::after{
+      content:"▾";
+      font-size: 14px;
+      opacity:.7;
+      transition: transform .2s ease;
+    }
+    .column-controls[open] summary::after{
+      transform: rotate(-180deg);
+    }
+    .column-meta{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .column-panel{
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px dashed rgba(17,24,39,.12);
+      display:grid;
+      gap:10px;
+    }
+    .column-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .btn-soft{
+      padding:7px 12px;
+      border-radius:999px;
+      border:1px solid rgba(17,24,39,.12);
+      background:#fff;
+      color:var(--text);
+      font-weight:800;
+      cursor:pointer;
+      font-size:12px;
+    }
+    .column-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap:8px 10px;
+      max-height: 200px;
+      overflow:auto;
+      padding-right:6px;
+    }
+    .column-item{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:13px;
+      color:var(--text);
+      padding:6px 8px;
+      border-radius:10px;
+      border:1px solid rgba(15,23,42,.08);
+      background: rgba(255,255,255,.92);
+    }
+    .column-item input{
+      accent-color: var(--green);
+      width: 16px;
+      height: 16px;
+    }
+    table.data{
+      width:100%;
+      min-width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      font-size:13px;
+      overflow: hidden;
+    }
+    table.data th, table.data td{
+      border-bottom:1px solid rgba(17,24,39,.08);
+      padding:8px 10px;
+      text-align:left;
+      vertical-align:top;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    table.data th{
+      font-size:12px;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing:.04em;
+    }
+    table.data th.wrap,
+    table.data td.wrap{
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      line-height: 1.2;
+      max-width: 320px;
+    }
+    .muted{ color: var(--muted); }
+    .table-scroll{
+      overflow-x: hidden;
+      margin-top:16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .table-scroll table.data{
+      min-width: 100%;
+    }
+    td[data-editable="true"]{
+      cursor: pointer;
+    }
+    .inline-editor{
+      width:100%;
+      border:1px solid rgba(15,23,42,.25);
+      border-radius:8px;
+      padding:6px 8px;
+      font:inherit;
+      box-sizing:border-box;
+      min-height:30px;
+    }
+    .inline-feedback{
+      display:none;
+      margin-top:8px;
+    }
+    .pill{
+      background: rgba(11,95,83,.92);
+      color:#fff;
+      font-weight:800;
+      border-radius:10px;
+      padding:9px 12px;
+      font-size:13px;
+      display:flex;
+      align-items:center;
+    }
+    .edit-card{
+      margin-top:16px;
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      background: rgba(255,255,255,.7);
+      padding:14px;
+    }
+    .edit-card input,
+    .edit-card select,
+    .edit-card textarea{
+      width:100%;
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid rgba(17,24,39,.12);
+      background:#fff;
+      font-size:13px;
+      font-family: inherit;
+    }
+    .edit-card label{
+      display:block;
+      font-size:12px;
+      font-weight:700;
+      color: var(--muted);
+      margin-bottom:6px;
+    }
+    .edit-title{
+      font-weight:800;
+      margin-bottom:12px;
+    }
+    .edit-grid{
+      display:grid;
+      grid-template-columns: 180px 1fr 180px 1fr;
+      gap:10px 12px;
+    }
+    .edit-wide{ grid-column: span 4; }
+    .edit-actions{
+      margin-top:12px;
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+    .btn-danger{
+      padding:9px 14px;
+      border-radius:12px;
+      border:1px solid rgba(239,68,68,.45);
+      background: rgba(239,68,68,.85);
+      color:#fff;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .empty{
+      padding:10px;
+      color: var(--muted);
+      border:1px dashed rgba(17,24,39,.18);
+      border-radius:12px;
+      background: rgba(255,255,255,.5);
+    }
+    @media (max-width: 1100px){
+      .hero-head{ flex-direction: column; }
+      .db-card{ width: 100%; }
+      .edit-grid{ grid-template-columns: 1fr; }
+      .edit-wide{ grid-column: auto; }
+    }
+    @media (max-width: 820px){
+      .filters-row{ grid-template-columns: 1fr; }
+      table.data{ font-size:12px; }
+      table.data td{ white-space: normal; }
+    }
+  </style>
+
+  <div class="hero">
+    <div class="hero-head">
+      <div class="hero-main">
+        <h2>Banco de dados</h2>
+        <p>Visao administrativa dos dados salvos no SQLite. Use os filtros para localizar usuarios e solicitacoes.</p>
+      </div>
+      <div class="db-card">
+        <div class="db-title">Conexao com database</div>
+        <div class="db-engine">{{ db_engine_label }}</div>
+        <div class="db-status {% if db_status_ok %}ok{% else %}err{% endif %}">
+          {% if db_status_ok %}Ativa{% else %}Erro{% endif %}
+        </div>
+        <div class="db-meta">Base: {{ db_name_display }}</div>
+        {% if db_error %}
+          <div class="db-error">{{ db_error }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="db-meta-row">
+    <strong>Exibindo {{ solicitacoes|length }} de {{ solicitacoes_total|default:0 }} solicitacoes</strong>
+    <span>Limite de {{ filters.limit }} linhas</span>
+  </div>
+
+  <script>
+    (function () {
+      const table = document.querySelector(".table-wrap table.data");
+      const feedback = document.getElementById("inline-feedback");
+      if (!table) return;
+
+      const statusChoices = JSON.parse('{{ status_choices_json|escapejs }}');
+      const priorityChoices = JSON.parse('{{ priority_choices_json|escapejs }}');
+      const csrfTokenMatch = document.cookie.match(/csrftoken=([^;]+)/);
+      const csrfToken = csrfTokenMatch ? csrfTokenMatch[1] : "";
+      let activeEditor = null;
+      let feedbackTimeout = null;
+
+      function showInlineFeedback(message, variant) {
+        if (!feedback) return;
+        feedback.textContent = message;
+        feedback.className = "action-msg inline-feedback " + (variant === "error" ? "error" : "success");
+        feedback.style.display = "block";
+        clearTimeout(feedbackTimeout);
+        feedbackTimeout = setTimeout(() => {
+          feedback.style.display = "none";
+        }, 4000);
+      }
+
+      function cancelInlineEdit() {
+        if (!activeEditor) return;
+        const { cell, originalDisplay, originalValue } = activeEditor;
+        cell.textContent = originalDisplay;
+        cell.dataset.value = originalValue;
+        activeEditor = null;
+      }
+
+      function finishInlineEdit(cell, display, value) {
+        if (!cell) return;
+        cell.textContent = display;
+        cell.dataset.value = value;
+        activeEditor = null;
+      }
+
+      function persistInlineEdit(cell, field, rowId, newValue) {
+        if (!csrfToken) {
+          showInlineFeedback("Token CSRF ausente.", "error");
+          cancelInlineEdit();
+          return;
+        }
+        const payload = new URLSearchParams({
+          action: "inline_update",
+          solicitacao_id: rowId,
+          field,
+          value: newValue,
+        });
+        fetch(window.location.pathname + window.location.search, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": csrfToken,
+          },
+          body: payload.toString(),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              return response
+                .json()
+                .catch(() => ({ success: false, error: "Erro ao salvar." }))
+                .then((data) => {
+                  throw new Error(data.error || "Erro ao salvar.");
+                });
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (!data.success) {
+              throw new Error(data.error || "Erro ao salvar.");
+            }
+            finishInlineEdit(cell, data.display, data.value);
+            showInlineFeedback("Campo salvo.", "success");
+          })
+          .catch((error) => {
+            showInlineFeedback(error.message || "Erro ao salvar.", "error");
+            cancelInlineEdit();
+          });
+      }
+
+      function commitInlineEdit() {
+        if (!activeEditor) return;
+        const { cell, field, originalValue } = activeEditor;
+        const editor = activeEditor.editor;
+        const newValue = (editor && editor.value) || "";
+        if (newValue === originalValue) {
+          cancelInlineEdit();
+          return;
+        }
+        const rowId = cell.closest("tr")?.dataset?.solicitacaoId || "";
+        if (!rowId) {
+          showInlineFeedback("Solicitação sem identificador.", "error");
+          cancelInlineEdit();
+          return;
+        }
+        persistInlineEdit(cell, field, rowId, newValue);
+      }
+
+      function startInlineEditor(cell) {
+        if (!cell || cell.dataset.editable !== "true") return;
+        cancelInlineEdit();
+        const type = cell.dataset.type;
+        const originalDisplay = cell.textContent;
+        const originalValue = cell.dataset.value || "";
+        let editor;
+
+        if (type === "select") {
+          editor = document.createElement("select");
+          const choicesKey = cell.dataset.choices;
+          const options = choicesKey === "prioridade" ? priorityChoices : statusChoices;
+          options.forEach((option) => {
+            const opt = document.createElement("option");
+            opt.value = option.value;
+            opt.textContent = option.label || option.value;
+            editor.appendChild(opt);
+          });
+        } else if (type === "textarea") {
+          editor = document.createElement("textarea");
+          editor.rows = 2;
+        } else {
+          editor = document.createElement("input");
+          editor.type = type === "number" ? "number" : "text";
+        }
+
+        editor.value = originalValue;
+        editor.className = "inline-editor";
+        activeEditor = {
+          cell,
+          editor,
+          field: cell.dataset.field,
+          originalDisplay,
+          originalValue,
+        };
+        cell.textContent = "";
+        cell.appendChild(editor);
+        editor.focus();
+
+        editor.addEventListener("blur", () => {
+          setTimeout(() => {
+            if (!activeEditor || activeEditor.editor !== editor) return;
+            commitInlineEdit();
+          }, 0);
+        });
+
+        editor.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" && type !== "textarea" && type !== "select") {
+            event.preventDefault();
+            editor.blur();
+          }
+          if (event.key === "Escape") {
+            event.preventDefault();
+            cancelInlineEdit();
+          }
+        });
+
+        activeEditor.editor = editor;
+      }
+
+      table.addEventListener("click", (event) => {
+        const cell = event.target.closest("td[data-field]");
+        if (!cell) return;
+        startInlineEditor(cell);
+      });
+
+      const tableWrap = document.querySelector(".table-wrap");
+      const columnToggles = Array.from(document.querySelectorAll(".column-toggle"));
+      const columnCountEl = document.querySelector("[data-columns-count]");
+      const columnActions = Array.from(document.querySelectorAll("[data-columns-action]"));
+      const columnStorageKey = "gvproj_admin_db_columns";
+      const defaultColumns = new Set([
+        "id",
+        "status",
+        "descricao",
+        "secao",
+        "area",
+        "job",
+        "jobs_envolvidas",
+        "sufixo",
+        "descricao_ferramenta",
+        "desenho_referencia",
+      ]);
+
+      function updateColumnCount(visibleSet) {
+        if (!columnCountEl) return;
+        columnCountEl.textContent = `${visibleSet.size} selecionadas`;
+      }
+
+      function applyColumnVisibility(visibleSet) {
+        if (!table) return;
+        columnToggles.forEach((toggle) => {
+          const colName = toggle.value;
+          const show = visibleSet.has(colName);
+          toggle.checked = show;
+          table.querySelectorAll(`[data-col="${colName}"]`).forEach((cell) => {
+            cell.style.display = show ? "" : "none";
+          });
+        });
+        updateColumnCount(visibleSet);
+        try {
+          localStorage.setItem(columnStorageKey, JSON.stringify(Array.from(visibleSet)));
+        } catch (err) {
+          /* ignore storage errors */
+        }
+      }
+
+      function readStoredColumns() {
+        try {
+          const raw = localStorage.getItem(columnStorageKey);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) return null;
+          return new Set(parsed);
+        } catch (err) {
+          return null;
+        }
+      }
+
+      function getAllColumns() {
+        return new Set(columnToggles.map((toggle) => toggle.value));
+      }
+
+      if (tableWrap && columnToggles.length) {
+        const stored = readStoredColumns();
+        const allColumns = getAllColumns();
+        let initialSet = stored && stored.size ? stored : defaultColumns;
+        initialSet = new Set([...initialSet].filter((col) => allColumns.has(col)));
+        if (!initialSet.size) {
+          initialSet = allColumns;
+        }
+        applyColumnVisibility(initialSet);
+        tableWrap.dataset.columnsReady = "true";
+
+        columnToggles.forEach((toggle) => {
+          toggle.addEventListener("change", () => {
+            const visible = new Set(
+              columnToggles.filter((item) => item.checked).map((item) => item.value)
+            );
+            applyColumnVisibility(visible);
+          });
+        });
+
+        columnActions.forEach((actionBtn) => {
+          actionBtn.addEventListener("click", () => {
+            const action = actionBtn.dataset.columnsAction;
+            if (action === "all") {
+              applyColumnVisibility(getAllColumns());
+              return;
+            }
+            if (action === "none") {
+              applyColumnVisibility(new Set());
+              return;
+            }
+            if (action === "reset") {
+              const resetSet = new Set(
+                [...defaultColumns].filter((col) => allColumns.has(col))
+              );
+              applyColumnVisibility(resetSet.size ? resetSet : allColumns);
+            }
+          });
+        });
+      }
+    })();
+  </script>
+
+  <div class="filters">
+    <form method="get">
+      <div class="filters-row">
+        <div class="field">
+          <label>Grupo</label>
+          <select name="group">
+            <option value="">Todos</option>
+            {% for g in group_options %}
+              <option value="{{ g }}" {% if filters.group == g %}selected{% endif %}>{{ g }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Usuario</label>
+          <select name="username" id="filter-username">
+            <option value="">Todos</option>
+            {% for user_item in users_for_filter %}
+              <option value="{{ user_item.username }}"
+                      data-groups="{{ user_item.groups_csv }}"
+                      {% if filters.username == user_item.username %}selected{% endif %}>
+                {{ user_item.username }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select name="status" id="filter-status">
+            <option value="">Todos</option>
+            {% for value, label in status_choices %}
+              <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ value }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Prioridade</label>
+          <select name="prioridade" id="filter-prioridade">
+            <option value="">Todas</option>
+            {% for value, label in priority_choices %}
+              <option value="{{ value }}" {% if filters.prioridade == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Busca</label>
+          <input type="text" name="q" value="{{ filters.q }}" placeholder="titulo, descricao, id..." data-default="{{ filters.q }}">
+        </div>
+        <div class="field">
+          <label>Limite</label>
+          <input type="number" name="limit" value="{{ filters.limit }}" min="1" max="500" data-default="{{ filters.limit }}">
+          <small style="display:block; margin-top:4px; color:rgba(15,23,42,.6); font-size:11px;">
+            Maximo 500 registros por requisicao.
+          </small>
+        </div>
+      </div>
+      <div class="filters-actions">
+        <button class="btn" type="submit">Aplicar filtros</button>
+        <a class="btn-ghost" href="{% url 'admin_banco_de_dados' %}">Limpar</a>
+      </div>
+    </form>
+    <details class="column-controls">
+      <summary>
+        <span>Colunas visíveis</span>
+        <span class="column-meta" data-columns-count>0 selecionadas</span>
+      </summary>
+      <div class="column-panel">
+        <div class="column-actions">
+          <button class="btn-soft" type="button" data-columns-action="all">Mostrar todas</button>
+          <button class="btn-soft" type="button" data-columns-action="none">Ocultar todas</button>
+          <button class="btn-soft" type="button" data-columns-action="reset">Padrão</button>
+        </div>
+        <div class="column-grid">
+          {% for field in inline_fields %}
+            <label class="column-item">
+              <input type="checkbox" class="column-toggle" value="{{ field.name }}" checked>
+              <span>{{ field.label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+    </details>
+  </div>
+
+  {% if action_msg %}
+    <div class="action-msg success">{{ action_msg }}</div>
+  {% endif %}
+  {% if action_err %}
+    <div class="action-msg error">{{ action_err }}</div>
+  {% endif %}
+
+  <script>
+    (function () {
+      const groupSelect = document.querySelector('select[name="group"]');
+      const userSelect = document.getElementById("filter-username");
+      const statusSelect = document.getElementById("filter-status");
+      const prioridadeSelect = document.getElementById("filter-prioridade");
+      const buscaInput = document.querySelector('input[name="q"]');
+      const limitInput = document.querySelector('input[name="limit"]');
+
+      if (!groupSelect || !userSelect || !statusSelect || !prioridadeSelect) return;
+
+      const allUserOptions = Array.from(userSelect.options).map((opt) => ({
+        value: opt.value,
+        label: opt.text,
+        groups: (opt.dataset.groups || "").split(",").filter(Boolean),
+      }));
+
+      const allPriorityOptions = Array.from(prioridadeSelect.options).map((opt) => ({
+        value: opt.value,
+        label: opt.text,
+      }));
+
+      const allStatusOptions = Array.from(statusSelect.options).map((opt) => ({
+        value: opt.value,
+        label: opt.text,
+      }));
+
+      const statusOptionsByGroup = {
+        SOLICITANTE: [
+          { value: "", label: "Todos" },
+          { value: "dashboard_solicitante", label: "Dashboard" },
+          { value: "novo_apontamento", label: "Criar nova solicitacao" },
+          { value: "status_do_projeto", label: "Controle de Projetos" },
+          { value: "aprovar_reaprovar", label: "Aprovar / Reaprovar" },
+          { value: "solicitar_retrabalho", label: "Solicitar retrabalho" },
+          { value: "retorno_final", label: "Retorno final" },
+        ],
+        PROJETISTA: [
+          { value: "", label: "Todos" },
+          { value: "dashboard_projetista", label: "Dashboard" },
+          { value: "fila_trabalho", label: "Fila de trabalho" },
+          { value: "preencher_solicitacao", label: "Preencher solicitacao" },
+          { value: "retrabalho_solicitado", label: "Retrabalho solicitado" },
+          { value: "enviar_aprovacao", label: "Enviar para aprovacao" },
+        ],
+        DISPOSITIVOS: [
+          { value: "", label: "Todos" },
+          { value: "dashboard_dispositivos", label: "Dashboard" },
+          { value: "disp_novo_completo", label: "Novo disp. Completo" },
+          { value: "disp_novo_parte_retrabalhada", label: "Novo disp. + parte retrabalhada" },
+          { value: "disp_novo_parte_existente", label: "Novo disp. + parte existente" },
+          { value: "disp_usar_projeto_existente", label: "Usar projeto existente (fisico nao existente)" },
+          { value: "disp_regularizar_art", label: "Regularizar disp. fisicamente existente (ART)" },
+          { value: "disp_retrabalhar_disp_existente", label: "Retrabalhar disp. fisicamente existente" },
+          { value: "disp_usar_disp_existente_regularizado", label: "Usar disp. fisicamente existente regularizado" },
+          { value: "disp_cancelar_frnr", label: "Cancelar FRNR" },
+          { value: "disp_job_irma", label: "Job Irma" },
+          { value: "disp_fabricacao_interna", label: "Fabricacao Interna" },
+          { value: "disp_retrabalhar_projeto", label: "Retrabalhar Projeto" },
+        ],
+      };
+
+      const prioridadeByGroup = {
+        ADMIN: [],
+        SOLICITANTE: ["1", "2", "3", "4"],
+        PROJETISTA: ["1", "2", "3", "4"],
+        DISPOSITIVOS: ["1", "2", "3", "4"],
+      };
+
+      function rebuildSelect(select, options) {
+        const currentValue = select.value;
+        select.innerHTML = "";
+        options.forEach((opt) => {
+          const option = document.createElement("option");
+          option.value = opt.value;
+          option.text = opt.label;
+          select.appendChild(option);
+        });
+        if (select.querySelector(`option[value="${currentValue}"]`)) {
+          select.value = currentValue;
+        } else {
+          select.value = "";
+        }
+      }
+
+      function applyGroup() {
+        const group = groupSelect.value;
+        const isAdmin = group === "ADMIN";
+
+        userSelect.innerHTML = "";
+        allUserOptions.forEach((opt) => {
+          if (!group || !opt.value || opt.groups.includes(group)) {
+            const option = document.createElement("option");
+            option.value = opt.value;
+            option.text = opt.label;
+            option.dataset.groups = opt.groups.join(",");
+            userSelect.appendChild(option);
+          }
+        });
+        userSelect.value = "";
+
+        if (isAdmin) {
+          rebuildSelect(statusSelect, [{ value: "", label: "-" }]);
+          rebuildSelect(prioridadeSelect, [{ value: "", label: "-" }]);
+          statusSelect.disabled = true;
+          prioridadeSelect.disabled = true;
+          if (buscaInput) {
+            buscaInput.value = "";
+            buscaInput.disabled = true;
+          }
+          if (limitInput) {
+            limitInput.value = "";
+            limitInput.disabled = true;
+          }
+        } else {
+          const statusOptions = statusOptionsByGroup[group] || allStatusOptions;
+          const prioridadeAllowed = prioridadeByGroup[group] || null;
+          rebuildSelect(statusSelect, statusOptions);
+          if (prioridadeAllowed === null) {
+            rebuildSelect(prioridadeSelect, allPriorityOptions);
+          } else {
+            rebuildSelect(
+              prioridadeSelect,
+              allPriorityOptions.filter((opt) => !opt.value || prioridadeAllowed.includes(opt.value))
+            );
+          }
+          statusSelect.disabled = false;
+          prioridadeSelect.disabled = false;
+          if (buscaInput) {
+            buscaInput.disabled = false;
+          }
+          if (limitInput) {
+            limitInput.disabled = false;
+          }
+        }
+      }
+
+      groupSelect.addEventListener("change", applyGroup);
+      applyGroup();
+    })();
+  </script>
+
+  <div class="table-wrap" data-columns-ready="false">
+    <h3>Solicitacoes ({{ solicitacoes_total|default:0 }})</h3>
+    {% if solicitacoes %}
+      <div class="table-scroll">
+        <div id="inline-feedback" class="action-msg inline-feedback muted"></div>
+        <table class="data">
+          <thead>
+              <tr>
+              {% for field in inline_fields %}
+                <th
+                  data-col="{{ field.name }}"
+                  class="{% if field.name == 'titulo' or field.name == 'descricao' or field.name == 'descricao_ferramenta' or field.name == 'descricao_tecnica' or field.name == 'dim_criticas' or field.name == 'observacoes_projeto' or field.name == 'observacoes_aprovacao' %}wrap{% endif %}"
+                >
+                  {{ field.label }}
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in inline_rows %}
+              {% with sol=row.solicitacao %}
+                <tr data-solicitacao-id="{{ sol.id }}">
+                  {% for field in inline_fields %}
+                    {% with cell=row.cells|dict_item:field.name %}
+                      <td
+                        data-col="{{ field.name }}"
+                        class="{% if field.name == 'titulo' or field.name == 'descricao' or field.name == 'descricao_ferramenta' or field.name == 'descricao_tecnica' or field.name == 'dim_criticas' or field.name == 'observacoes_projeto' or field.name == 'observacoes_aprovacao' %}wrap{% endif %}"
+                        data-field="{{ field.name }}"
+                        data-value="{{ cell.value|escape }}"
+                        data-editable="{{ field.editable|yesno:'true,false' }}"
+                        data-type="{{ field.type }}"
+                        {% if field.choices_key %}data-choices="{{ field.choices_key }}"{% endif %}
+                      >{{ cell.display }}</td>
+                    {% endwith %}
+                  {% endfor %}
+                </tr>
+              {% endwith %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">Nenhuma solicitacao encontrada.</div>
+    {% endif %}
+  </div>
+
+  {% if edit_solicitacao %}
+    <div class="edit-card" id="editar-solicitacao">
+      <div class="edit-title">Editar solicitacao #{{ edit_solicitacao.id }}</div>
+      <form method="post" enctype="multipart/form-data" action="{% url 'admin_banco_de_dados' %}?edit_id={{ edit_solicitacao.id }}{% if filters_query %}&{{ filters_query }}{% endif %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_solicitacao">
+        <input type="hidden" name="solicitacao_id" value="{{ edit_solicitacao.id }}">
+
+        <div class="edit-grid">
+          <div>
+            <label>Titulo</label>
+            <input type="text" name="titulo" value="{{ edit_solicitacao.titulo }}">
+          </div>
+          <div>
+            <label>Status</label>
+            <select name="status">
+              {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if edit_solicitacao.status == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label>Prioridade</label>
+            <select name="prioridade">
+              {% for value, label in priority_choices %}
+                <option value="{{ value }}" {% if edit_solicitacao.prioridade == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label>Quantidade</label>
+            <input type="number" name="quantidade" min="1" value="{{ edit_solicitacao.quantidade|default:1 }}">
+          </div>
+
+          <div>
+            <label>Secao</label>
+            <input type="text" name="secao" value="{{ edit_solicitacao.secao }}">
+          </div>
+          <div>
+            <label>Area</label>
+            <input type="text" name="area" value="{{ edit_solicitacao.area }}">
+          </div>
+          <div>
+            <label>Job</label>
+            <input type="text" name="job" value="{{ edit_solicitacao.job }}">
+          </div>
+          <div>
+            <label>Jobs envolvidas</label>
+            <input type="text" name="jobs_envolvidas" value="{{ edit_solicitacao.jobs_envolvidas }}">
+          </div>
+
+          <div>
+            <label>Sufixo</label>
+            <input type="text" name="sufixo" value="{{ edit_solicitacao.sufixo }}">
+          </div>
+          <div>
+            <label>Descricao ferramenta</label>
+            <textarea name="descricao_ferramenta" rows="3">{{ edit_solicitacao.descricao_ferramenta }}</textarea>
+          </div>
+          <div>
+            <label>WC</label>
+            <input type="text" name="wc" value="{{ edit_solicitacao.wc }}">
+          </div>
+          <div>
+            <label>Solicitado em</label>
+            <input type="datetime-local" name="solicitado_em" value="{{ edit_solicitacao.solicitado_em|date:'Y-m-d\\TH:i' }}">
+          </div>
+
+          <div>
+            <label>Evento SAP</label>
+            <input type="text" name="evento_sap" value="{{ edit_solicitacao.evento_sap }}">
+          </div>
+          <div>
+            <label>Numero MOC</label>
+            <input type="text" name="numero_moc" value="{{ edit_solicitacao.numero_moc }}">
+          </div>
+          <div>
+            <label>Numero dispositivo</label>
+            <input type="text" name="numero_dispositivo" value="{{ edit_solicitacao.numero_dispositivo }}">
+          </div>
+          <div>
+            <label>Tipo identificacao</label>
+            <input type="text" name="tipo_identificacao" value="{{ edit_solicitacao.tipo_identificacao }}">
+          </div>
+
+          <div>
+            <label>Baseline AME</label>
+            <input type="date" name="baseline_ame" value="{{ edit_solicitacao.baseline_ame|date:'Y-m-d' }}">
+          </div>
+          <div>
+            <label>Baseline producao</label>
+            <input type="date" name="baseline_producao" value="{{ edit_solicitacao.baseline_producao|date:'Y-m-d' }}">
+          </div>
+          <div>
+            <label>Linha produto</label>
+            <input type="text" name="linha_produto" value="{{ edit_solicitacao.linha_produto }}">
+          </div>
+          <div>
+            <label>Material</label>
+            <input type="text" name="material" value="{{ edit_solicitacao.material }}">
+          </div>
+
+          <div>
+            <label>Tratamento</label>
+            <input type="text" name="tratamento" value="{{ edit_solicitacao.tratamento }}">
+          </div>
+          <div>
+            <label>Prazo estimado</label>
+            <input type="date" name="prazo_estimado" value="{{ edit_solicitacao.prazo_estimado|date:'Y-m-d' }}">
+          </div>
+          <div class="edit-wide">
+            <label>Descricao tecnica</label>
+            <textarea name="descricao_tecnica" rows="3">{{ edit_solicitacao.descricao_tecnica }}</textarea>
+          </div>
+          <div class="edit-wide">
+            <label>Dim criticas</label>
+            <textarea name="dim_criticas" rows="3">{{ edit_solicitacao.dim_criticas }}</textarea>
+          </div>
+
+          <div class="edit-wide">
+            <label>Observacoes projeto</label>
+            <textarea name="observacoes_projeto" rows="3">{{ edit_solicitacao.observacoes_projeto }}</textarea>
+          </div>
+          <div class="edit-wide">
+            <label>Observacoes aprovacao</label>
+            <textarea name="observacoes_aprovacao" rows="3">{{ edit_solicitacao.observacoes_aprovacao }}</textarea>
+          </div>
+
+          <div class="edit-wide">
+            <label>Desenho referencia + PT</label>
+            <input type="text" name="desenho_referencia" value="{{ edit_solicitacao.desenho_referencia|default:'' }}">
+          </div>
+          <div class="edit-wide">
+            <label>Anexos (arquivo)</label>
+            <input type="file" name="anexos">
+            <div class="muted">Atual: {{ edit_solicitacao.anexos.name|default:"-" }}</div>
+          </div>
+        </div>
+
+        <div class="edit-actions">
+          <a class="btn-ghost" href="{% url 'admin_banco_de_dados' %}{% if filters_query %}?{{ filters_query }}{% endif %}">Cancelar</a>
+          <button class="btn" type="submit">Salvar alteracoes</button>
+        </div>
+      </form>
+    </div>
+  {% endif %}
+{% endblock %}

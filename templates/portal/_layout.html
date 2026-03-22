@@ -1,0 +1,187 @@
+{% load static %}
+{#
+  Template: templates/portal/_layout.html
+  Objetivo: Tela do portal:  layout.
+  Herda: n?o aplica (template base ou p?gina completa).
+  Blocos: content, menu, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}GV_PROJ{% endblock %}</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Space+Grotesk:wght@500;700&display=swap");
+
+    :root{
+      --gv-900:#043c33;
+      --gv-700:#0b6b57;
+      --gv-500:#138a6f;
+      --bg-1:#f5f8f6;
+      --bg-2:#eaf2ef;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --border: rgba(2,6,23,.10);
+      --shadow: 0 28px 60px rgba(2,6,23,.16);
+    }
+    body{
+      margin:0;
+      font-family:"Manrope","Segoe UI",Arial,sans-serif;
+      background:
+        radial-gradient(900px 420px at 10% -10%, #ffffff 0%, transparent 60%),
+        radial-gradient(700px 420px at 100% 10%, rgba(11,107,87,.10) 0%, transparent 55%),
+        linear-gradient(140deg, var(--bg-1), var(--bg-2));
+      color:#0f172a;
+    }
+    .wrap{ display:flex; min-height:100vh; }
+
+    .side{
+      width:260px;
+      background: linear-gradient(180deg, var(--gv-700) 0%, #075247 70%, #06473e 100%);
+      color:#eaf2ef;
+      padding:18px 14px;
+      box-shadow: 12px 0 28px rgba(2,6,23,.10);
+      border-right: 1px solid rgba(255,255,255,.08);
+      position:relative;
+      overflow:hidden;
+    }
+    .side::after{
+      content:"";
+      position:absolute;
+      inset:-40px;
+      background-image: radial-gradient(circle at 30% 20%, rgba(255,255,255,.16), transparent 60%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .brand{ position:relative; z-index:2; display:flex; gap:10px; align-items:center; margin-bottom:18px; }
+    .brand .dot{
+      width:40px;
+      height:40px;
+      border-radius:12px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.14);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+    }
+    .brand h1{ margin:0; font-size:18px; letter-spacing:.3px; }
+    .brand p{ margin:2px 0 0; font-size:12px; opacity:.85; }
+
+    .menu{ position:relative; z-index:2; display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+    .menu a{
+      text-decoration:none;
+      color:#fff;
+      padding:10px 12px;
+      border-radius:12px;
+      background:rgba(255,255,255,.08);
+      border:1px solid transparent;
+      display:block;
+      font-weight:700;
+    }
+    .menu a:hover{
+      background:rgba(255,255,255,.14);
+      border-color: rgba(255,255,255,.12);
+    }
+
+    .menu .spacer{ height:10px; }
+
+    .logout{
+      margin-top:auto;
+      position:relative;
+      z-index:2;
+    }
+    .logout form button{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.25);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow: 0 10px 22px rgba(2,6,23,.18);
+    }
+
+    .content{
+      flex:1;
+      padding:22px;
+      position:relative;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:16px;
+      padding:14px 18px;
+      background: rgba(255,255,255,.55);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .topbar .user{
+      color:var(--muted);
+      font-weight:700;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:20px;
+      box-shadow: var(--shadow);
+      padding:20px 20px;
+    }
+    .ge-logo{
+      position:absolute;
+      top:12px;
+      right:16px;
+      width:200px;
+      opacity:.06;
+      pointer-events:none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <aside class="side">
+      <div class="brand">
+        <div class="dot brand-mark">GEVERNOVA PROJ</div>
+        <div>
+          <h1>GV_PROJ</h1>
+          <p>GE Vernova • MVP local</p>
+        </div>
+      </div>
+
+      <nav class="menu">
+        {% block menu %}{% endblock %}
+        <div class="spacer"></div>
+      </nav>
+
+      <div class="logout">
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit">Sair</button>
+        </form>
+      </div>
+    </aside>
+
+    <main class="content">
+      <img class="ge-logo" src="{% static 'img/ge_vernova.png' %}" alt="GE Vernova">
+      <div class="topbar">
+        <div></div>
+        <div class="user">Logado como: {{ request.user.username }}</div>
+      </div>
+
+      <div class="card">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+</body>
+</html>
+
+

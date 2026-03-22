@@ -1,0 +1,18 @@
+{% with current=request.resolver_match.url_name %}
+  <div class="navsec">PAINEL</div>
+  <nav class="nav">
+    <a class="{% if current == 'dashboard_projetista' %}active{% endif %}" href="{% url 'dashboard_projetista' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-dashboard"></use></svg></div>Dashboard
+    </a>
+
+    <div class="navsec" style="margin-top:12px;">SOLICITACOES</div>
+
+    <a class="{% if current == 'fila_trabalho' %}active{% endif %}" href="{% url 'fila_trabalho' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-inbox"></use></svg></div>Controle de projetos
+    </a>
+
+    <a class="{% if current == 'retrabalho_solicitado' or current == 'corrigir_retrabalho' %}active{% endif %}" href="{% url 'retrabalho_solicitado' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-refresh"></use></svg></div>Retrabalho solicitado
+    </a>
+  </nav>
+{% endwith %}

@@ -1,0 +1,78 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/enviar_aprovacao.html
+  Objetivo: Tela do portal: enviar aprovacao.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - Enviar para aprovação{% endblock %}
+
+{% block sidebar %}
+  {% include "portal/_sidebar_projetista.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="hero">
+    <h2>Enviar para aprovação</h2>
+    <p>Envie itens prontos para o solicitante aprovar/reprovar.</p>
+  </div>
+
+  {% if ok %}
+    <div class="tile" style="grid-column: span 12; border:1px solid rgba(11,95,83,.25); background:rgba(11,95,83,.06);">
+      <b>Enviado (placeholder).</b> Próximo passo: atualizar status no banco.
+    </div>
+  {% endif %}
+
+  <div class="grid">
+    <form class="tile" method="post" style="grid-column: span 12; padding:18px;">
+      {% csrf_token %}
+
+      <h3 style="margin:0 0 10px;">Itens prontos</h3>
+
+      <div style="display:grid; gap:10px;">
+        <label style="display:flex; gap:10px; align-items:center; padding:12px; border-radius:14px; border:1px solid rgba(17,24,39,.10); background:rgba(255,255,255,.70);">
+          <input type="checkbox" name="itens" value="001">
+          <div>
+            <div style="font-weight:900;">#001 • JOB-12345</div>
+            <div style="color:var(--muted); font-size:13px;">Pronto para aprovação</div>
+          </div>
+        </label>
+
+        <label style="display:flex; gap:10px; align-items:center; padding:12px; border-radius:14px; border:1px solid rgba(17,24,39,.10); background:rgba(255,255,255,.70);">
+          <input type="checkbox" name="itens" value="002">
+          <div>
+            <div style="font-weight:900;">#002 • JOB-77777</div>
+            <div style="color:var(--muted); font-size:13px;">Pronto após retrabalho</div>
+          </div>
+        </label>
+      </div>
+
+      <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
+        <button class="btn-soft" type="reset">🧹 Limpar</button>
+        <button class="btn-primary" type="submit">📤 Enviar selecionados</button>
+      </div>
+    </form>
+  </div>
+
+  <style>
+    .btn-soft{
+      border:1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.65);
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:800;
+      color: var(--text);
+      cursor:pointer;
+    }
+    .btn-primary{
+      border:none;
+      background: var(--green);
+      color:#fff;
+      padding:10px 16px;
+      border-radius:999px;
+      font-weight:900;
+      cursor:pointer;
+    }
+  </style>
+{% endblock %}

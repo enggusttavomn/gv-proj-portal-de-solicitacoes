@@ -1,0 +1,18 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/disp_usar_projeto_existente.html
+  Objetivo: Tela do portal: disp usar projeto existente.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - Usar Projeto existente{% endblock %}
+{% block sidebar %}{% include "portal/_sidebar_dispositivos.html" %}{% endblock %}
+{% block content %}
+  <div class="hero">
+    <h2>Usar Projeto existente (Físico não existente)</h2>
+    <p>O projeto existe no sistema, mas o físico não existe (re-fabricação / reabertura).</p>
+  </div>
+  {% if ok %}<div class="tile" style="border:1px solid rgba(11,95,83,.25); background:rgba(11,95,83,.06);"><b>Enviado (placeholder).</b></div>{% endif %}
+  {% include "portal/_disp_form_base.html" with tipo="Usar Projeto existente" %}
+{% endblock %}

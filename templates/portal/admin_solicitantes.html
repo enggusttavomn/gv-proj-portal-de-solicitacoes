@@ -1,0 +1,108 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/admin_solicitantes.html
+  Objetivo: Tela do portal: admin solicitantes.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observacao: este arquivo e um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}Admin - Solicitantes | GV_PROJ{% endblock %}
+
+{% block sidebar %}
+  {% include "portal/_sidebar_admin.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="hero">
+    <h2>Solicitantes ({{ selected_label|default:"Todos" }})</h2>
+    <p>Visao administrativa: acompanhar solicitacoes por solicitante.</p>
+  </div>
+
+  <div class="filters">
+    <form method="get" class="filter-form">
+      <label for="solicitante">Filtrar solicitante</label>
+      <select id="solicitante" name="solicitante" onchange="this.form.submit()">
+        <option value="">Todos os solicitantes</option>
+        {% for opt in solicitante_options %}
+          <option value="{{ opt.id }}" {% if selected_solicitante_id == opt.id|stringformat:"s" %}selected{% endif %}>{{ opt.label }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button class="btn-soft" type="submit">Aplicar</button></noscript>
+    </form>
+
+    <div class="filter-summary">
+      <div class="filter-chip">Visao atual</div>
+      <div class="filter-value">{{ selected_label }}</div>
+    </div>
+  </div>
+
+  {% include "portal/_solicitante_dashboard_body.html" %}
+
+  <style>
+    .filters{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(17,24,39,.10);
+      background: rgba(255,255,255,.70);
+      box-shadow: 0 10px 24px rgba(0,0,0,.08);
+    }
+    .filter-form{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .filter-form label{
+      font-size:12px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color: var(--muted);
+    }
+    .filter-form select{
+      min-width: 220px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.85);
+      font-weight:700;
+    }
+    .btn-soft{
+      border:1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.85);
+      padding:8px 12px;
+      border-radius:12px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .filter-summary{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .filter-chip{
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      background: rgba(11,95,83,.10);
+      color: var(--green);
+      border: 1px solid rgba(11,95,83,.20);
+      white-space: nowrap;
+    }
+    .filter-value{
+      font-weight:900;
+      color: var(--text);
+    }
+    @media (max-width: 1100px){
+      .filters{ flex-direction:column; align-items:flex-start; }
+    }
+  </style>
+{% endblock %}

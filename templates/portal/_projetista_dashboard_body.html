@@ -1,0 +1,7861 @@
+<div class="grid">
+            <div class="tile summary-tile" style="grid-column: span 12;">
+      <div class="summary-head">
+        <div class="summary-title">
+          <span class="summary-date summary-date--left" aria-label="Dados de hoje">
+            <span class="summary-date-label">Hoje</span>
+            <span class="summary-date-value">{% now "d/m/Y" %}</span>
+          </span>
+          <span class="summary-title-soft">Distribuicao das demandas do projetista por status</span>
+        </div>
+
+        <div class="summary-actions">
+          <div class="summary-date summary-date--right" aria-label="Dados de hoje">
+            <div class="summary-date-label">Hoje</div>
+            <div class="summary-date-value">{% now "d/m/Y" %}</div>
+          </div>
+          <div class="summary-pendencias">
+            <div class="summary-pendencias-label">Pendencias abertas:</div>
+            <div class="summary-pendencias-value">{{ total_aberto|default:0 }}</div>
+          </div>
+          <div class="otd-info">
+            <button class="otd-info-btn" type="button" aria-label="Como ler o resumo">i</button>
+            <div class="otd-tooltip" role="tooltip">
+              <div class="otd-tooltip-title">Resumo por status</div>
+              <p>Cada cor representa um status do fluxo do projetista.</p>
+              <p class="otd-tooltip-muted">A legenda abaixo ajuda a identificar cada cor.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% with fila=fila_count|default:0 rw=retrabalho_count|default:0 %}
+        {% with total=fila|add:rw %}
+          <div class="summary-bar">
+            {% if total > 0 %}
+              <div class="summary-seg seg-fila" style="--seg: {{ fila }};"></div>
+              <div class="summary-seg seg-retrabalho" style="--seg: {{ rw }};"></div>
+            {% else %}
+              <div class="summary-seg seg-empty"></div>
+            {% endif %}
+          </div>
+
+          <div class="summary-legend">
+            <div class="summary-item">
+              <span class="summary-dot dot-fila"></span>
+              <span class="summary-label">Fila (aguardando projeto)</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-dot dot-retrabalho"></span>
+              <span class="summary-label">Retrabalho solicitado</span>
+            </div>
+          </div>
+        {% endwith %}
+      {% endwith %}
+    </div>
+
+
+    <div class="tile kpi-tile" style="grid-column: span 12; padding:16px;">
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-fila">
+          <div class="kpi-label">Fila</div>
+          <div class="kpi-value">{{ fila_count|default:0 }}</div>
+          <a class="kpi-link" href="{% url 'fila_trabalho' %}">Ver lista</a>
+        </div>
+        <div class="kpi-card kpi-retrabalho">
+          <div class="kpi-label">Retrabalho</div>
+          <div class="kpi-value">{{ retrabalho_count|default:0 }}</div>
+          <a class="kpi-link" href="{% url 'retrabalho_solicitado' %}">Ver lista</a>
+        </div>
+      </div>
+    </div>
+    </div>
+
+        <div class="tile pie-tile" style="grid-column: span 12;">
+        <div class="pie-head">
+          <div>
+            <h3>Status do trabalho</h3>
+            <p>Distribuicao das demandas do projetista.</p>
+          </div>
+          <div class="otd-info">
+            <button class="otd-info-btn" type="button" aria-label="Como ler o grafico de status">i</button>
+            <div class="otd-tooltip" role="tooltip">
+              <div class="otd-tooltip-title">Grafico de status</div>
+              <p>Mostra a proporcao de demandas por status no momento. O numero no centro e o total.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-visuals">
+          {% with fila=fila_count|default:0 rw=retrabalho_count|default:0 %}
+            {% with total=fila|add:rw %}
+              <div class="pie-wrap">
+                {% if total > 0 %}
+                  <div class="pie-chart" style="--p1:{% widthratio fila total 100 %}; --p2:{% widthratio rw total 100 %};">
+                {% else %}
+                  <div class="pie-chart pie-empty">
+                {% endif %}
+                    <div class="pie-labels" aria-hidden="true"></div>
+                    <div class="pie-center">
+                      <div class="pie-total">{{ total|default:0 }}</div>
+                      <div class="pie-sub">Total</div>
+                    </div>
+                  </div>
+                  <div class="pie-meta" data-pie-meta>
+                    <div class="pie-meta-head">
+                      <span class="pie-meta-label">Data</span>
+                      <strong class="pie-meta-date" data-pie-label>--</strong>
+                    </div>
+                    <div class="pie-meta-grid" data-pie-grid></div>
+                  </div>
+              </div>
+            {% endwith %}
+          {% endwith %}
+
+          <div class="trend-card">
+            <div class="trend-header">
+              <div class="trend-title">
+                <div class="trend-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" role="img" focusable="false">
+                    <path d="M5 16l4-4 3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M18 5h4v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4>Evolucao do fluxo</h4>
+                  <p>Indicadores do projetista ao longo do tempo.</p>
+                </div>
+              </div>
+              <div class="trend-actions">
+                <div class="trend-filters" role="group" aria-label="Filtro de periodo">
+                  <button class="trend-filter" type="button" data-period="semana">Semana</button>
+                  <button class="trend-filter active" type="button" data-period="mes">Mes</button>
+                  <button class="trend-filter" type="button" data-period="ano">Ano</button>
+                </div>
+                <div class="otd-info">
+                  <button class="otd-info-btn" type="button" aria-label="Como ler a evolucao">i</button>
+                  <div class="otd-tooltip" role="tooltip">
+                    <div class="otd-tooltip-title">Evolucao no tempo</div>
+                    <p>Linha mostra o percentual de cada status ao longo do periodo.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="trend-legend" role="group" aria-label="Filtrar series do grafico">
+              <button class="trend-item" type="button" data-series-key="__all"><span class="trend-dot dot-all"></span>Todos</button>
+              <button class="trend-item" type="button" data-series-key="fila"><span class="trend-dot dot-fila"></span>Fila</button>
+              <button class="trend-item" type="button" data-series-key="retrabalho"><span class="trend-dot dot-retrabalho"></span>Retrabalho</button>
+            </div>
+
+            <div class="trend-chart">
+              <span class="trend-axis-y" aria-hidden="true">Percentual (%)</span>
+              <canvas id="projetistaTrendChart" role="img" aria-label="Evolucao do fluxo"></canvas>
+              <div class="trend-tooltip" data-trend-tooltip hidden></div>
+              <div class="trend-x-select" data-trend-x-select aria-label="Selecionar data"></div>
+            </div>
+
+            <div class="trend-foot">
+              <div class="trend-pill">Fila <strong>{{ fila_count|default:0 }}</strong></div>
+              <div class="trend-pill">Retrabalhos <strong>{{ retrabalho_count|default:0 }}</strong></div>
+            </div>
+          </div>
+        </div>
+    </div>
+
+
+{% if chart_entries %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <div class="kpi-chart-block">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <div class="kpi-chart-head">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            <div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              <h4>Solicitações abertas</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              <p>As barras crescem verticalmente com o tempo aberto; o eixo X mostra o GV_PROJ.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            <div class="kpi-chart-filters">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              <button type="button" class="kpi-chart-filter active" data-age-range="semana">Semana</button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              <button type="button" class="kpi-chart-filter" data-age-range="mes">Mês</button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              <div class="kpi-chart-info">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <button class="kpi-chart-info-btn" type="button" aria-label="Como funciona o grafico">i</button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <div class="kpi-chart-tooltip" role="tooltip">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  <div class="kpi-chart-tooltip-title">Como funciona</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  <p>Cada barra mostra os dias e horas em aberto desde a criacao.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  <p class="kpi-chart-tooltip-muted">Eixo X: numero do GV_PROJ. Eixo Y: dias em aberto.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              </div></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <div class="kpi-chart-grid">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            <div class="kpi-chart-wrapper">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              <canvas id="projetistaAgeChart" role="img" aria-label="Tempo aberto das solicitações em dias e horas"></canvas>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            <div class="kpi-age-list">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              <div class="kpi-age-head">Mais antigos</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              <div class="kpi-age-legend">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <span class="kpi-legend-swatch" aria-hidden="true"></span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  <div class="kpi-legend-title">Tempo em aberto</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  <div class="kpi-legend-sub">Dias + horas (barras em verde)</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              <div class="kpi-age-items">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                {% for entry in chart_entries|slice:":6" %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  <div class="kpi-age-item">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    <div class="kpi-age-main">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      <div class="kpi-age-gv">GV_PROJ {{ entry.display_id }}</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      <div class="kpi-age-meta">Criado {{ entry.created_label }}</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    <div class="kpi-age-days">{{ entry.age_days|floatformat:1 }}d</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                {% empty %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  <div class="kpi-age-empty">Sem itens em aberto.</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                {% endfor %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      {% else %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <div class="kpi-chart-empty">Nenhuma solicitação ativa encontrada.</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      {% endif %}
+
+          <div class="tile flow-tile" style="grid-column: span 12;">
+      <div class="flow-head">
+        <div>
+          <h3>Fluxo do projetista</h3>
+          <p>Baseado no workflow atual: puxar da fila e tratar retrabalho.</p>
+        </div>
+        <div class="flow-tag">Projetista</div>
+      </div>
+
+      <div class="flow-grid">
+        <a class="flow-card tone-neutral" data-step="01" href="{% url 'fila_trabalho' %}">
+          <div class="flow-title-row">
+            <div class="flow-title">Abrir fila</div>
+            <div class="flow-badge">{{ fila_count|default:0 }}</div>
+          </div>
+          <div class="flow-desc">Puxe a proxima demanda em <strong>EM_FILA</strong>.</div>
+          <div class="flow-meta">Ir para controle de projetos</div>
+        </a>
+
+        <a class="flow-card tone-warn" data-step="02" href="{% url 'retrabalho_solicitado' %}">
+          <div class="flow-title-row">
+            <div class="flow-title">Tratar retrabalho</div>
+            <div class="flow-badge">{{ retrabalho_count|default:0 }}</div>
+          </div>
+          <div class="flow-desc">Revise o motivo, ajuste e devolva para o solicitante.</div>
+          <div class="flow-meta">Ver itens devolvidos</div>
+        </a>
+      </div>
+    </div>
+  </div>
+  <style>
+    .summary-tile{
+      padding:16px;
+    }
+    .summary-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
+    .summary-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .summary-date{
+      display:flex;
+      align-items:baseline;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background: linear-gradient(135deg, rgba(15,23,42,.08), rgba(15,23,42,.02));
+      border:1px solid rgba(15,23,42,.15);
+      color:var(--text);
+    }
+    .summary-date-label{
+      font-weight:900;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.1em;
+      color:var(--text);
+    }
+    .summary-date-value{
+      font-weight:900;
+      font-size:13px;
+    }
+    .summary-date--right{
+      display:none;
+    }
+    .summary-tile.date-right .summary-date--left{
+      display:none;
+    }
+    .summary-tile.date-right .summary-date--right{
+      display:flex;
+    }
+    .summary-title{
+      display:flex;
+      gap:6px;
+      align-items:baseline;
+      flex-wrap:wrap;
+    }
+    .summary-title-strong{
+      font-weight:900;
+      color:var(--text);
+    }
+    .summary-title-soft{
+      font-weight:500;
+      color:var(--text);
+    }
+    .summary-pendencias{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      background: linear-gradient(135deg, rgba(11,95,83,.12), rgba(11,95,83,.04));
+      border:1px solid rgba(11,95,83,.22);
+      box-shadow: 0 6px 14px rgba(11,95,83,.08);
+    }
+    .summary-pendencias-label{
+      font-weight:800;
+      color:var(--muted);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+    .summary-pendencias-value{
+      font-size:22px;
+      font-weight:900;
+      color:var(--green);
+      line-height:1;
+    }
+    .summary-bar{
+      display:flex;
+      height:14px;
+      border-radius:999px;
+      overflow:hidden;
+      border:1px solid rgba(17,24,39,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(243,245,248,.9));
+      box-shadow: inset 0 1px 2px rgba(15,23,42,.08);
+    }
+    .summary-seg{
+      height:100%;
+      flex: var(--seg, 1) 0 0;
+      min-width: 0;
+    }
+    .seg-pendente{ background: rgba(100,116,139,.75); }
+    .seg-aprovacao{ background: rgba(59,130,246,.70); }
+    .seg-retrabalho{ background: rgba(245,158,11,.75); }
+    .seg-aprovado{ background: rgba(11,95,83,.95); }
+    .seg-cancelado{ background: rgba(220,38,38,.88); }
+    .seg-empty{ background: rgba(15,23,42,.12); }
+    .summary-legend{
+      display:flex;
+      gap:18px;
+      flex-wrap:wrap;
+      margin-top:10px;
+      font-size:13px;
+      color:var(--text);
+    }
+    .summary-item{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-weight:500;
+    }
+    .summary-dot{
+      width:10px;
+      height:10px;
+      border-radius:3px;
+      display:inline-block;
+    }
+    .dot-pendente{ background: rgba(100,116,139,.75); }
+    .dot-all{ background: rgba(15,23,42,.45); }
+    .dot-aprovacao{ background: rgba(59,130,246,.70); }
+    .dot-retrabalho{ background: rgba(245,158,11,.75); }
+    .dot-aprovado{ background: rgba(11,95,83,.95); }
+    .dot-cancelado{ background: rgba(220,38,38,.88); }
+    .label-aprovado{ color: var(--green); font-weight:900; }
+    .label-cancelado{ color: rgba(220,38,38,.95); font-weight:900; }
+    .kpi-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+      gap:12px;
+    }
+    .kpi-card{
+      position:relative;
+      overflow:hidden;
+      border:1px solid rgba(17,24,39,.10);
+      background: linear-gradient(140deg, rgba(255,255,255,.92), rgba(240,244,248,.9));
+      border-radius:18px;
+      padding:14px;
+      --kpi-color: var(--muted);
+      box-shadow: 0 12px 26px rgba(15,23,42,.08);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .kpi-card::before{
+      content:"";
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:4px;
+      background: linear-gradient(90deg, var(--kpi-color), rgba(255,255,255,0));
+      opacity:.75;
+    }
+    .kpi-card::after{
+      content:"";
+      position:absolute;
+      right:-30px;
+      top:-30px;
+      width:90px;
+      height:90px;
+      border-radius:50%;
+      background: radial-gradient(circle, rgba(255,255,255,.8), rgba(255,255,255,0));
+      opacity:.7;
+      pointer-events:none;
+    }
+    .kpi-card:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 16px 30px rgba(15,23,42,.12);
+      border-color: rgba(11,95,83,.25);
+    }
+    .kpi-label{
+      font-size:11px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--text);
+      font-weight:900;
+    }
+    .kpi-value{
+      font-size:26px;
+      font-weight:900;
+      color:var(--kpi-color);
+      margin-top:6px;
+    }
+    .kpi-link{
+      display:inline-flex;
+      margin-top:8px;
+      text-decoration:none;
+      font-weight:800;
+      color:var(--kpi-color);
+      font-size:13px;
+      position:relative;
+    }
+    .kpi-link::after{
+      content:"";
+      position:absolute;
+      left:0;
+      bottom:-2px;
+      width:100%;
+      height:2px;
+      background: currentColor;
+      opacity:.25;
+      transform: scaleX(.6);
+      transform-origin:left;
+      transition: transform .15s ease, opacity .15s ease;
+    }
+    .kpi-card:hover .kpi-link::after{
+      transform: scaleX(1);
+      opacity:.5;
+    }
+    .kpi-pendente{ --kpi-color: rgba(100,116,139,.95); }
+    .kpi-aprovacao{ --kpi-color: rgba(59,130,246,.95); }
+    .kpi-retrabalho{ --kpi-color: rgba(245,158,11,.95); }
+    .kpi-aprovado{ --kpi-color: var(--green); }
+    .kpi-cancelado{ --kpi-color: rgba(220,38,38,.95); }
+    @media (max-width: 1100px){
+      .kpi-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width: 720px){
+      .kpi-grid{ grid-template-columns: 1fr; }
+    }
+    .pie-tile{
+      padding:18px;
+    }
+    .pie-head h3{
+      margin:0;
+      font-size:18px;
+    }
+    .pie-head p{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .pie-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .status-visuals{
+      margin-top:-4px;
+      display:flex;
+      gap:16px;
+      align-items: stretch;
+    }
+    .status-visuals .pie-wrap{
+      flex: 0 0 min(360px, 38%);
+    }
+    .status-visuals .trend-card{
+      flex: 1;
+      min-width: 0;
+    }
+    .trend-chart{
+      width: 100%;
+    }
+    .pie-wrap{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:16px;
+      flex-direction:column;
+      min-height:0;
+      padding-bottom:0;
+    }
+    .pie-chart{
+      --p1: 0;
+      --p2: 0;
+      --p3: 0;
+      --p4: 0;
+      --p5: 0;
+      width:clamp(180px, 22vw, 280px);
+      height:clamp(180px, 22vw, 280px);
+      border-radius:50%;
+      background:
+        conic-gradient(
+          rgba(100,116,139,.85) 0% calc(var(--p1) * 1%),
+          rgba(59,130,246,.85) calc(var(--p1) * 1%) calc((var(--p1) + var(--p2)) * 1%),
+          rgba(245,158,11,.85) calc((var(--p1) + var(--p2)) * 1%) calc((var(--p1) + var(--p2) + var(--p3)) * 1%),
+          rgba(11,95,83,.92) calc((var(--p1) + var(--p2) + var(--p3)) * 1%) calc((var(--p1) + var(--p2) + var(--p3) + var(--p4)) * 1%),
+          rgba(220,38,38,.9) calc((var(--p1) + var(--p2) + var(--p3) + var(--p4)) * 1%) 100%
+        );
+      position:relative;
+      box-shadow: 0 16px 30px rgba(15,23,42,.12);
+    }
+    .pie-labels{
+      position:absolute;
+      inset:0;
+      z-index:4;
+      pointer-events:none;
+    }
+    .pie-label{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%, -50%);
+      padding:2px 6px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.02em;
+      color:#fff;
+      background: rgba(255,255,255,.26);
+      border:1px solid rgba(255,255,255,.45);
+      box-shadow: 0 6px 14px rgba(15,23,42,.18);
+      text-shadow: 0 1px 2px rgba(15,23,42,.35);
+      white-space:nowrap;
+    }
+    .pie-label.is-small{
+      font-size:10px;
+      padding:2px 5px;
+      opacity:.85;
+    }
+    .pie-chart.pie-empty{
+      background: conic-gradient(rgba(15,23,42,.12) 0 100%);
+    }
+    .pie-center{
+      position:absolute;
+      inset:32px;
+      border-radius:50%;
+      background: rgba(255,255,255,.95);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      box-shadow: inset 0 0 0 1px rgba(15,23,42,.06);
+      z-index:3;
+    }
+    .pie-total{
+      font-size:28px;
+      font-weight:900;
+      color:var(--text);
+      line-height:1;
+    }
+    .pie-sub{
+      font-size:12px;
+      font-weight:800;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      margin-top:6px;
+    }
+    .pie-meta{
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      margin-top:4px;
+    }
+    .pie-meta-head{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 12px;
+      border-radius:999px;
+      background: linear-gradient(135deg, rgba(15,23,42,.08), rgba(15,23,42,.02));
+      border:1px solid rgba(15,23,42,.12);
+      box-shadow: 0 8px 16px rgba(15,23,42,.08);
+    }
+    .pie-meta-label{
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.16em;
+      color:var(--muted);
+    }
+    .pie-meta-date{
+      font-size:13px;
+      font-weight:900;
+      color:var(--text);
+    }
+    @media (max-width: 720px){
+      .pie-label{
+        font-size:10px;
+        padding:2px 5px;
+      }
+    }
+    .trend-card{
+      border:1px solid rgba(15,23,42,.12);
+      background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(241,245,249,.95));
+      border-radius:16px;
+      padding:12px 12px 10px;
+      box-shadow: 0 14px 26px rgba(15,23,42,.08);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .trend-header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .trend-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .trend-title{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .trend-icon{
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      background: rgba(11,95,83,.12);
+      color: var(--green);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: inset 0 0 0 1px rgba(11,95,83,.12);
+    }
+    .trend-icon svg{
+      width:18px;
+      height:18px;
+    }
+    .trend-title h4{
+      margin:0;
+      font-size:15px;
+    }
+    .trend-title p{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .trend-filters{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    .trend-filters .trend-filter{
+      border:1px solid rgba(11,95,83,.22) !important;
+      background: rgba(11,95,83,.14) !important;
+      color: rgba(11,95,83,.9) !important;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      cursor:pointer;
+    }
+    .trend-filters .trend-filter.active{
+      background: rgba(11,95,83,.95) !important;
+      border-color: rgba(11,95,83,.95) !important;
+      color: #fff !important;
+    }
+    .trend-legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px 14px;
+      font-size:12px;
+      color:rgba(15,23,42,.7);
+    }
+    .trend-legend .trend-item{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-weight:700;
+      border:1px solid rgba(11,95,83,.12) !important;
+      background: rgba(11,95,83,.08) !important;
+      color: rgba(11,95,83,.85) !important;
+      border-radius:999px;
+      padding:4px 8px;
+      cursor:pointer;
+      transition: background .12s ease, color .12s ease, border-color .12s ease;
+    }
+    .trend-legend .trend-item.is-active{
+      background: rgba(11,95,83,.95) !important;
+      border-color: rgba(11,95,83,.95) !important;
+      color:#fff !important;
+    }
+    .trend-legend .trend-item.is-muted{
+      opacity:.45;
+    }
+    .trend-dot{
+      width:10px;
+      height:10px;
+      border-radius:3px;
+      display:inline-block;
+    }
+    .trend-chart{
+      position:relative;
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:14px;
+      padding:16px 16px 16px 44px;
+      background:
+        repeating-linear-gradient(
+          180deg,
+          rgba(15,23,42,.06) 0 1px,
+          transparent 1px 28px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          rgba(15,23,42,.04) 0 1px,
+          transparent 1px 90px
+        );
+      overflow:visible;
+    }
+    .trend-axis-y{
+      position:absolute;
+      left:8px;
+      top:50%;
+      transform: translateY(-50%) rotate(-90deg);
+      transform-origin:left center;
+      font-size:11px;
+      letter-spacing:.12em;
+      color:rgba(15,23,42,.55);
+      text-transform:uppercase;
+      white-space:nowrap;
+      z-index:4;
+      pointer-events:none;
+    }
+    .trend-chart canvas{
+      position:relative;
+      inset:auto;
+      z-index:2;
+      width:100%;
+      height:220px;
+      display:block;
+      cursor:pointer;
+    }
+    .trend-x-select{
+      position:relative;
+      margin-top:8px;
+      height:32px;
+    }
+    .trend-x-select .trend-x-btn{
+      position:absolute;
+      top:0;
+      border:1px solid rgba(11,95,83,.18) !important;
+      background: rgba(11,95,83,.10) !important;
+      color: rgba(11,95,83,.88) !important;
+      border-radius:8px;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.04em;
+      padding:4px 8px;
+      text-align:center;
+      cursor:pointer;
+      transform: translateX(-50%);
+      white-space:nowrap;
+      box-shadow:none;
+      filter:none;
+      transition: background .12s ease, color .12s ease, border-color .12s ease;
+    }
+    .trend-x-select .trend-x-btn:hover,
+    .trend-x-select .trend-x-btn:active{
+      transform: translateX(-50%);
+      box-shadow:none;
+      filter:none;
+    }
+    .trend-x-select .trend-x-btn.active{
+      background: rgba(11,95,83,.95) !important;
+      border-color: rgba(11,95,83,.95) !important;
+      color: #fff !important;
+    }
+    .trend-x-select.compact .trend-x-btn{
+      font-size:10px;
+      padding:2px 4px;
+      border-radius:6px;
+    }
+    .trend-tooltip{
+      position:absolute;
+      z-index:6;
+      min-width:160px;
+      background:#fff;
+      border:1px solid rgba(15,23,42,.14);
+      border-radius:12px;
+      padding:8px 10px;
+      box-shadow: 0 12px 24px rgba(15,23,42,.18);
+      font-size:11px;
+      color:var(--text);
+      pointer-events:none;
+      opacity:0;
+      transform: translate(-50%, calc(-100% - 12px));
+      transition: opacity .12s ease, transform .12s ease;
+    }
+    .trend-tooltip.is-visible{
+      opacity:1;
+    }
+    .trend-tooltip-title{
+      font-weight:800;
+      font-size:12px;
+      margin-bottom:6px;
+      color:var(--text);
+    }
+    .trend-tooltip-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:2px 0;
+      font-weight:700;
+      color:rgba(15,23,42,.72);
+    }
+    .trend-tooltip-name{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .trend-tooltip-dot{
+      width:8px;
+      height:8px;
+      border-radius:3px;
+      background: var(--dot-color, rgba(15,23,42,.6));
+      flex:0 0 auto;
+    }
+    .trend-foot{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap:8px;
+    }
+    .trend-pill{
+      border:1px solid rgba(15,23,42,.08);
+      background: rgba(15,23,42,.04);
+      border-radius:12px;
+      padding:8px 10px;
+      font-size:12px;
+      color:rgba(15,23,42,.7);
+      text-align:center;
+      font-weight:700;
+    }
+    .trend-pill strong{
+      display:block;
+      color:var(--text);
+      font-size:13px;
+      margin-top:2px;
+    }
+      .otd-otc-tile{
+        grid-column: span 12;
+        padding: 28px;
+        border-radius: 26px;
+        border:1px solid rgba(15,23,42,.12);
+        background: linear-gradient(150deg, rgba(255,255,255,.98), rgba(237,245,255,.9));
+        box-shadow: 0 25px 45px rgba(15,23,42,.12);
+      }
+      .otd-header{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
+        flex-wrap:wrap;
+        margin-bottom:24px;
+      }
+      .otd-header-text h3{
+        margin:0;
+        font-size:20px;
+        font-weight:900;
+      }
+      .otd-header-text p{
+        margin:6px 0 0;
+        color:var(--muted);
+        font-size:13px;
+        line-height:1.5;
+      }
+      .otd-header-actions{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+      }
+      .otd-tag{
+        border:1px solid rgba(15,23,42,.2);
+        background: rgba(11,95,83,.08);
+        color:var(--green);
+        padding:6px 12px;
+        border-radius:999px;
+        font-size:11px;
+        font-weight:800;
+        text-transform:uppercase;
+        letter-spacing:.08em;
+      }
+      .otd-info{
+        position:relative;
+      }
+      .otd-info-btn{
+        width:28px;
+        height:28px;
+        border-radius:50%;
+        border:1px solid rgba(15,23,42,.15);
+        background:#fff;
+        font-weight:900;
+        color:var(--text);
+        cursor:pointer;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow: 0 10px 18px rgba(15,23,42,.12);
+      }
+      .otd-info-btn:focus-visible{
+        outline:2px solid rgba(11,95,83,.45);
+        outline-offset:3px;
+      }
+      .otd-tooltip{
+        position:absolute;
+        right:0;
+        top:calc(100% + 8px);
+        width:min(320px, 86vw);
+        background:#fff;
+        border:1px solid rgba(15,23,42,.12);
+        border-radius:16px;
+        padding:14px;
+        box-shadow: 0 20px 30px rgba(15,23,42,.16);
+        opacity:0;
+        transform: translateY(-6px);
+        pointer-events:none;
+        transition: opacity .2s ease, transform .2s ease;
+        z-index:20;
+      }
+      .otd-tooltip::before{
+        content:"";
+        position:absolute;
+        right:18px;
+        top:-6px;
+        width:12px;
+        height:12px;
+        background:#fff;
+        border-left:1px solid rgba(15,23,42,.12);
+        border-top:1px solid rgba(15,23,42,.12);
+        transform: rotate(45deg);
+      }
+      .otd-info:hover .otd-tooltip,
+      .otd-info:focus-within .otd-tooltip{
+        opacity:1;
+        transform: translateY(0);
+        pointer-events:auto;
+      }
+      .otd-tooltip-title{
+        font-size:11px;
+        font-weight:900;
+        text-transform:uppercase;
+        letter-spacing:.08em;
+        color:var(--text);
+        margin-bottom:6px;
+      }
+      .otd-tooltip p{
+        margin:6px 0 0;
+        color:var(--muted);
+        font-size:12px;
+        line-height:1.45;
+        font-weight:600;
+      }
+      .otd-tooltip-muted{
+        font-style:normal;
+        opacity:.8;
+      }
+      .otd-tooltip ul{
+        margin:6px 0 0 16px;
+        padding:0;
+        color:var(--muted);
+        font-size:12px;
+        line-height:1.5;
+      }
+      .otd-grid{
+        display:grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
+        gap:20px;
+        align-items:stretch;
+        margin-top:10px;
+      }
+      .otd-card{
+        border:1px solid rgba(15,23,42,.1);
+        background: rgba(255,255,255,.94);
+        border-radius:20px;
+        padding:18px;
+        box-shadow: 0 12px 28px rgba(15,23,42,.08);
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+        min-height:420px;
+        position:relative;
+        overflow:hidden;
+      }
+      .otd-card::before{
+        content:"";
+        position:absolute;
+        left:0;
+        right:0;
+        top:0;
+        height:4px;
+        background: var(--otd-accent, rgba(15,23,42,.2));
+      }
+      .otd-card.tone-success{
+        --otd-accent: rgba(34,197,94,.85);
+      }
+      .otd-card.tone-warn{
+        --otd-accent: rgba(245,158,11,.9);
+      }
+      .otd-title-row{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:10px;
+      }
+      .otd-title-actions{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+      }
+      .otd-info-inline{
+        display:inline-flex;
+        align-items:center;
+      }
+      .otd-info-inline .otd-info-btn{
+        width:24px;
+        height:24px;
+        font-size:12px;
+        box-shadow: 0 8px 14px rgba(15,23,42,.12);
+      }
+      .otd-info-inline .otd-tooltip{
+        right:0;
+      }
+      .otd-title{
+        font-weight:900;
+        font-size:20px;
+        color:var(--text);
+        margin-bottom:2px;
+      }
+      .otd-subtitle{
+        font-size:12px;
+        font-weight:800;
+        color:var(--muted);
+        text-transform:uppercase;
+        letter-spacing:.08em;
+      }
+      .otd-chip{
+        border-radius:999px;
+        padding:6px 14px;
+        font-size:11px;
+        font-weight:900;
+        text-transform:uppercase;
+        letter-spacing:.08em;
+        border:1px solid transparent;
+      }
+      .otd-chip.success{
+        background: rgba(34,197,94,.1);
+        color:var(--green);
+        border-color: rgba(34,197,94,.4);
+      }
+      .otd-chip.warn{
+        background: rgba(245,158,11,.13);
+        color: rgba(245,158,11,.95);
+        border-color: rgba(245,158,11,.4);
+      }
+      .otd-card-body{
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:16px;
+        width:100%;
+      }
+      .gauge{
+        --size: clamp(200px, 26vw, 260px);
+        --thickness: 16px;
+        --needle-color: rgba(15,23,42,.9);
+        width: var(--size);
+        height: calc(var(--size) / 2 + 54px);
+        margin: 0 auto;
+        position:relative;
+        background: radial-gradient(circle at 50% 110%, rgba(255,255,255,.6), transparent 60%);
+      }
+      .gauge-arc{
+        width: var(--size);
+        height: calc(var(--size) / 2);
+        overflow:hidden;
+        margin: 0 auto;
+        position:relative;
+      }
+      .gauge-arc::before{
+        content:"";
+        display:block;
+        width: var(--size);
+        height: var(--size);
+        border-radius:50%;
+        background:
+          conic-gradient(
+            from 180deg,
+            var(--gauge-color) 0deg calc(var(--value) * 1.8deg),
+            rgba(15,23,42,.11) calc(var(--value) * 1.8deg) 180deg,
+            transparent 0
+          ),
+          conic-gradient(
+            from 180deg,
+            rgba(239,68,68,.9) 0deg 54deg,
+            rgba(245,158,11,.9) 54deg 108deg,
+            rgba(250,204,21,.9) 108deg 135deg,
+            rgba(34,197,94,.9) 135deg 180deg,
+            transparent 0
+          );
+        box-shadow: inset 0 0 0 var(--thickness) rgba(255,255,255,.96);
+        filter: drop-shadow(0 16px 24px rgba(15,23,42,.15));
+      }
+      .gauge-target{
+        position:absolute;
+        left:50%;
+        bottom:20px;
+        width:3px;
+        height:18px;
+        background: rgba(15,23,42,.75);
+        border-radius:999px;
+        transform-origin: bottom center;
+        transform: translateX(-50%) rotate(calc(-90deg + (var(--target) * 1.8deg)));
+        box-shadow: 0 0 0 2px rgba(255,255,255,.85);
+      }
+      .gauge-needle{
+        position:absolute;
+        left:50%;
+        bottom:20px;
+        width:4px;
+        height: calc(var(--size) / 2 - 10px);
+        background: var(--needle-color);
+        border-radius:999px;
+        transform-origin: bottom center;
+        transform: translateX(-50%) rotate(calc(-90deg + (var(--value) * 1.8deg)));
+        box-shadow: 0 6px 12px rgba(15,23,42,.28);
+      }
+      .gauge-needle::after{
+        content:"";
+        position:absolute;
+        left:50%;
+        bottom:-8px;
+        width:18px;
+        height:18px;
+        background:#fff;
+        border:3px solid var(--needle-color);
+        border-radius:50%;
+        transform: translateX(-50%);
+        box-shadow: 0 8px 16px rgba(15,23,42,.18);
+      }
+      .gauge-cover{
+        position:absolute;
+        left:0;
+        right:0;
+        bottom:36px;
+        text-align:center;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:2px;
+      }
+      .gauge-value{
+        font-size:26px;
+        font-weight:900;
+        color:var(--text);
+      }
+      .gauge-foot{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        padding:6px 12px;
+        border-radius:999px;
+        border:1px solid rgba(15,23,42,.12);
+        background: rgba(255,255,255,.95);
+        box-shadow: 0 10px 18px rgba(15,23,42,.08);
+        font-size:12px;
+        font-weight:900;
+        color:var(--text);
+      }
+      .gauge-foot-label{
+        font-size:10px;
+        text-transform:uppercase;
+        letter-spacing:.08em;
+        color:var(--muted);
+      }
+      .gauge-foot-value{
+        font-size:12px;
+        font-weight:900;
+      }
+      .gauge-scale{
+        display:flex;
+        justify-content:space-between;
+        width: calc(var(--size) - 24px);
+        margin: 46px auto 0;
+        padding-bottom:4px;
+        font-size:11px;
+        font-weight:800;
+        color:rgba(15,23,42,.6);
+      }
+      .otd-meta{
+        display:grid;
+        grid-template-columns: repeat(2, minmax(0,1fr));
+        gap:12px 16px;
+        font-size:12px;
+        width:100%;
+      }
+      .otd-meta-item{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:6px;
+        padding:8px 10px;
+        border-radius:12px;
+        border:1px solid rgba(15,23,42,.08);
+        background: rgba(255,255,255,.9);
+        box-shadow: 0 8px 16px rgba(15,23,42,.06);
+      }
+      .otd-label{
+        color:var(--muted);
+        font-weight:700;
+      }
+      .otd-number{
+        font-weight:900;
+        color:var(--text);
+      }
+        .otd-formula{
+          font-size:12px;
+          color:var(--text);
+          border:1px dashed rgba(15,23,42,.18);
+          padding:12px 14px;
+          width:100%;
+          font-weight:700;
+          text-align:left;
+          border-radius:14px;
+          background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(244,247,252,.94));
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+          display:flex;
+          flex-direction:column;
+          gap:6px;
+        }
+        .otd-formula-title{
+          font-size:10px;
+          font-weight:900;
+          letter-spacing:.12em;
+          text-transform:uppercase;
+          color: rgba(15,23,42,.65);
+          margin-bottom:6px;
+        }
+        .otd-formula-text{
+          font-size:13px;
+          font-weight:900;
+          color:var(--text);
+          display:grid;
+          grid-template-columns: auto minmax(200px, 1fr) auto;
+          align-items:center;
+          column-gap:10px;
+          text-align:center;
+          width:100%;
+        }
+        .formula-left,
+        .formula-right{
+          display:inline-flex;
+          align-items:center;
+          gap:6px;
+          white-space:nowrap;
+        }
+        .formula-right{
+          justify-self:end;
+        }
+        .formula-name{
+          font-size:14px;
+          font-weight:900;
+        }
+        .formula-fraction{
+          display:flex;
+          flex-direction:column;
+          align-items:center;
+          gap:4px;
+          padding:4px 8px;
+          width:100%;
+          min-width: 180px;
+        }
+        .formula-num,
+        .formula-den{
+          font-size:12px;
+          font-weight:800;
+          color:var(--text);
+          text-transform:uppercase;
+          letter-spacing:.05em;
+        }
+        .formula-bar{
+          width:100%;
+          height:2px;
+          border-radius:999px;
+          background: linear-gradient(90deg, rgba(15,23,42,.15), rgba(15,23,42,.65), rgba(15,23,42,.15));
+        }
+        .formula-group,
+        .formula-eq,
+        .formula-mul{
+          font-size:13px;
+          font-weight:900;
+        }
+        @media (max-width: 720px){
+          .otd-formula-text{
+            grid-template-columns: 1fr;
+            row-gap:8px;
+          }
+          .formula-left,
+          .formula-right{
+            justify-content:center;
+          }
+          .formula-right{
+            justify-self:center;
+          }
+        }
+        .otd-formula-note{
+          margin-top:4px;
+          font-size:12px;
+          color:var(--muted);
+          font-weight:600;
+        }
+      .flow-head{
+        display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:12px;
+    }
+    .flow-head h3{
+      margin:0;
+      font-size:18px;
+    }
+    .flow-head p{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .flow-tag{
+      border:1px solid rgba(11,95,83,.2);
+      background: rgba(11,95,83,.08);
+      color:var(--green);
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+    .flow-map{
+      position:relative;
+      display:grid;
+      grid-template-columns: repeat(4, minmax(190px, 1fr));
+      grid-template-rows: repeat(3, minmax(120px, auto));
+      row-gap:20px;
+      column-gap:24px;
+      align-items:center;
+      padding:0;
+      min-height: 400px;
+    }
+    .flow-node{
+      position:relative;
+      display:block;
+      text-decoration:none;
+      color:inherit;
+      border:1px solid rgba(148,163,184,.45);
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      border-radius:14px;
+      padding:14px 16px 12px;
+      min-height: 90px;
+      box-shadow: 0 10px 18px rgba(15,23,42,.08);
+      transition: box-shadow .15s ease, border-color .15s ease;
+    }
+    .flow-node::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      bottom:0;
+      width:5px;
+      border-radius:14px 0 0 14px;
+      background: #94a3b8;
+    }
+    .flow-node:hover{
+      box-shadow: 0 14px 22px rgba(15,23,42,.12);
+      border-color: rgba(15,23,42,.2);
+    }
+    .flow-node:focus-visible{
+      outline:2px solid rgba(11,95,83,.45);
+      outline-offset:2px;
+    }
+    .flow-node-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .flow-node-title{
+      font-weight:800;
+      font-size:14px;
+      color:var(--text);
+    }
+    .flow-node-meta{
+      font-size:10px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:rgba(100,116,139,.9);
+      margin-top:4px;
+    }
+    .flow-node-desc{
+      margin-top:8px;
+      color:rgba(100,116,139,.9);
+      font-size:12px;
+      line-height:1.35;
+    }
+    .flow-node-info{
+      position:relative;
+      z-index:5;
+      margin-left:6px;
+    }
+    .flow-node-info .otd-info-btn{
+      width:22px;
+      height:22px;
+      font-size:11px;
+      box-shadow: 0 6px 12px rgba(15,23,42,.14);
+      background: #0f766e;
+      color:#fff;
+      border:1px solid rgba(255,255,255,.6);
+    }
+    .flow-node-info .otd-tooltip{
+      right:0;
+      top:calc(100% + 6px);
+    }
+    .flow-node-info .otd-tooltip::before{
+      right:12px;
+    }
+    .flow-node.tone-success::before{
+      background: #0f766e;
+    }
+    .flow-node.tone-cancel::before{
+      background: #dc2626;
+    }
+    .flow-node.tone-warn::before{
+      background: #f59e0b;
+    }
+    .flow-node{
+      z-index:2;
+    }
+    .flow-arrows{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+      z-index:1;
+    }
+    .node-start{ grid-column:1; grid-row:2; }
+    .node-proj{ grid-column:2; grid-row:2; }
+    .node-approve{ grid-column:3; grid-row:1; }
+    .node-retrabalho{ grid-column:3; grid-row:2; }
+    .node-cancel{ grid-column:3; grid-row:3; }
+    .node-final{ grid-column:4; grid-row:2; }
+    .flow-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px,1fr));
+      gap:12px;
+    }
+    .flow-card{
+      --flow-accent: rgba(15,23,42,.25);
+      position:relative;
+      display:block;
+      text-decoration:none;
+      color:inherit;
+      border:1px solid rgba(17,24,39,.12);
+      background: linear-gradient(140deg, rgba(255,255,255,.9), rgba(243,245,248,.95));
+      border-radius:18px;
+      padding:16px 14px 16px 52px;
+      min-height:120px;
+      box-shadow: 0 12px 24px rgba(15,23,42,.06);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .flow-title-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .flow-info{
+      position:relative;
+      z-index:5;
+      margin-left:6px;
+    }
+    .flow-info .otd-info-btn{
+      width:22px;
+      height:22px;
+      font-size:11px;
+      box-shadow: 0 8px 14px rgba(15,23,42,.12);
+    }
+    .flow-info .otd-tooltip{
+      right:0;
+      top:calc(100% + 6px);
+    }
+    .flow-info .otd-tooltip::before{
+      right:12px;
+    }
+    .flow-card::before{
+      content: attr(data-step);
+      position:absolute;
+      top:16px;
+      left:16px;
+      width:26px;
+      height:26px;
+      border-radius:9px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      font-size:12px;
+      color:var(--text);
+      background: rgba(15,23,42,.10);
+    }
+    .flow-card::after{
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      height:4px;
+      border-radius:0 0 18px 18px;
+      background: var(--flow-accent);
+      opacity:.6;
+    }
+    .flow-card:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 16px 30px rgba(15,23,42,.10);
+      border-color: rgba(11,95,83,.35);
+    }
+    .flow-card:focus-visible{
+      outline:2px solid rgba(11,95,83,.45);
+      outline-offset:2px;
+    }
+    .flow-title{
+      font-weight:900;
+      color:var(--text);
+    }
+    .flow-desc{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.4;
+    }
+    .flow-card.tone-neutral{
+      --flow-accent: rgba(15,23,42,.45);
+    }
+    .flow-card.tone-neutral::before{
+      background: rgba(15,23,42,.12);
+      color:#334155;
+    }
+    .flow-card.tone-success{
+      --flow-accent: rgba(11,95,83,.7);
+    }
+    .flow-card.tone-success::before{
+      background: rgba(11,95,83,.14);
+      color:var(--green);
+    }
+    .flow-card.tone-cancel{
+      --flow-accent: rgba(220,38,38,.85);
+    }
+    .flow-card.tone-cancel::before{
+      background: rgba(220,38,38,.12);
+      color:#b91c1c;
+    }
+    .kpi-chart-block{
+      grid-column: span 12;
+      margin-top: 20px;
+      padding: 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(17,24,39,.10);
+      background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(238,246,244,.96));
+      box-shadow: 0 14px 30px rgba(15,23,42,.10);
+      display:flex;
+      flex-direction:column;
+      gap: 16px;
+    }
+    .kpi-chart-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap:wrap;
+    }
+    .kpi-chart-head h4{
+      margin:0;
+      font-size:16px;
+    }
+    .kpi-chart-head p{
+      margin:6px 0 0;
+      color: var(--muted);
+      font-size:13px;
+    }
+    .kpi-chart-filters{
+      display:flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .kpi-chart-info{
+      position: relative;
+    }
+    .kpi-chart-info-btn{
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(17,24,39,.18);
+      background: #fff;
+      font-weight: 800;
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 18px rgba(15,23,42,.12);
+    }
+    .kpi-chart-info-btn:focus-visible{
+      outline: 2px solid rgba(11,95,83,.45);
+      outline-offset: 3px;
+    }
+    .kpi-chart-tooltip{
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      width: min(320px, 86vw);
+      background: #fff;
+      border: 1px solid rgba(17,24,39,.12);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 20px 30px rgba(15,23,42,.16);
+      opacity: 0;
+      transform: translateY(-6px);
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+      z-index: 20;
+    }
+    .kpi-chart-tooltip::before{
+      content: "";
+      position: absolute;
+      right: 18px;
+      top: -6px;
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      border-left: 1px solid rgba(17,24,39,.12);
+      border-top: 1px solid rgba(17,24,39,.12);
+      transform: rotate(45deg);
+    }
+    .kpi-chart-info:hover .kpi-chart-tooltip,
+    .kpi-chart-info:focus-within .kpi-chart-tooltip{
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .kpi-chart-tooltip-title{
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .kpi-chart-tooltip p{
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .kpi-chart-tooltip-muted{
+      font-style: italic;
+    }
+    .kpi-chart-filters .kpi-chart-filter{
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid rgba(11,95,83,.22) !important;
+      background: rgba(11,95,83,.14) !important;
+      color: rgba(11,95,83,.9) !important;
+      cursor:pointer;
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+    .kpi-chart-filters .kpi-chart-filter.active{
+      background: rgba(11,95,83,.95) !important;
+      border-color: rgba(11,95,83,.95) !important;
+      color: #fff !important;
+    }
+    .kpi-chart-wrapper{
+      min-height: 260px;
+      position:relative;
+      border-radius: 14px;
+      border: 1px solid rgba(15,23,42,.08);
+      background: linear-gradient(180deg, rgba(248,250,252,.98), rgba(255,255,255,.92));
+      overflow: hidden;
+    }
+    .kpi-chart-wrapper canvas{
+      width: 100%;
+      height: 260px;
+    }
+    .kpi-chart-grid{
+      display:grid;
+      grid-template-columns: minmax(240px, 2.4fr) minmax(200px, 1fr);
+      gap:16px;
+      align-items:stretch;
+    }
+    .kpi-age-list{
+      border:1px solid rgba(17,24,39,.12);
+      border-radius:14px;
+      padding:12px;
+      background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(236,244,242,.92));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.6);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .kpi-age-head{
+      font-size:12px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:var(--muted);
+    }
+    .kpi-age-legend{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 10px;
+      border-radius:12px;
+      background: rgba(11,95,83,.08);
+      border: 1px solid rgba(11,95,83,.18);
+    }
+    .kpi-legend-swatch{
+      width:18px;
+      height:10px;
+      border-radius:8px;
+      background: linear-gradient(180deg, rgba(11,95,83,.98), rgba(8,75,67,.88));
+      box-shadow: inset 0 0 0 1px rgba(7,63,56,.8);
+    }
+    .kpi-legend-title{
+      font-size:12px;
+      font-weight:800;
+      color: var(--text);
+    }
+    .kpi-legend-sub{
+      font-size:11px;
+      color: var(--muted);
+    }
+    .kpi-age-items{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .kpi-age-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(15,23,42,.08);
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 6px 12px rgba(15,23,42,.06);
+    }
+    .kpi-age-main{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .kpi-age-gv{
+      font-weight:800;
+      font-size:12px;
+      color:var(--text);
+    }
+    .kpi-age-meta{
+      font-size:11px;
+      color:var(--muted);
+    }
+    .kpi-age-days{
+      font-weight:800;
+      font-size:11px;
+      color:var(--green);
+      padding:4px 8px;
+      border-radius:999px;
+      background: rgba(11,95,83,.12);
+      border: 1px solid rgba(11,95,83,.2);
+      white-space:nowrap;
+    }
+    .kpi-age-empty{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .kpi-chart-empty{
+      grid-column: span 12;
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 14px;
+      background: rgba(15,23,42,.04);
+      color: var(--muted);
+      text-align:center;
+    }
+    @media (max-width: 1100px){
+      .insight-row{
+        grid-template-columns: 1fr;
+      }
+      .kpi-chart-grid{
+        grid-template-columns: 1fr;
+      }
+      .flow-grid{ grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); }
+      .flow-map{
+        grid-template-columns: repeat(2, minmax(160px, 1fr));
+        grid-template-rows: none;
+        min-height: 0;
+      }
+      .flow-map .flow-node{
+        grid-column:auto;
+        grid-row:auto;
+      }
+      .flow-arrows{
+        display:none;
+      }
+    }
+    @media (max-width: 980px){
+      .status-visuals{
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 720px){
+      .flow-head{ flex-direction:column; align-items:flex-start; }
+      .flow-map{
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+      }
+      .flow-arrows{
+        display:none;
+      }
+      .pie-legend{ grid-template-columns: 1fr; }
+    }
+
+    .seg-fila{ background: rgba(11,95,83,.95); }
+    .seg-retrabalho{ background: rgba(245,158,11,.90); }
+    .dot-fila{ background: rgba(11,95,83,.95); }
+    .dot-retrabalho{ background: rgba(245,158,11,.90); }
+    .kpi-fila{ --kpi-color: rgba(11,95,83,.95); }
+    .kpi-retrabalho{ --kpi-color: rgba(245,158,11,.95); }
+
+  </style>
+  {{ projetista_trend_payload|json_script:"trendPayloadData" }}
+  {% if chart_entries %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    {{ chart_entries|json_script:"projetista-age-data" }}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      (function () {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        if (typeof Chart === "undefined") return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const payloadEl = document.getElementById("projetista-age-data");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        if (!payloadEl) return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const entries = JSON.parse(payloadEl.textContent || "[]") || [];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        if (!entries.length) return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const canvas = document.getElementById("projetistaAgeChart");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        if (!canvas) return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const ctx = canvas.getContext("2d");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        if (!ctx) return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const HOURS_PER_DAY = 24;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const ranges = {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          semana: { max: 7 * HOURS_PER_DAY, step: HOURS_PER_DAY },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          mes: { max: 30 * HOURS_PER_DAY, step: 2 * HOURS_PER_DAY },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        let activeRange = "semana";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        function formatGvProjLabel(value) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const text = String(value || "").trim();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          if (!/^\d{5,}$/.test(text)) return text;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const year = text.slice(0, 4);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const seq = text.slice(4);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          if (!/^\d+$/.test(seq)) return text;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          return year + seq.padStart(2, "0");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const datasetData = entries.map((entry) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const ageHours = Number(entry.age_hours);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          if (Number.isFinite(ageHours)) return ageHours;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const ageDays = Number(entry.age_days) || 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          return ageDays * HOURS_PER_DAY;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const rawLabels = entries.map((entry) => entry.display_id || entry.label);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const labels = rawLabels.map((label) => formatGvProjLabel(label));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        function toDurationParts(totalHours) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const safeHours = Number.isFinite(totalHours) ? Math.max(totalHours, 0) : 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const rounded = Math.round(safeHours);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const days = Math.floor(rounded / HOURS_PER_DAY);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const hours = rounded % HOURS_PER_DAY;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          return { days, hours, rounded };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        function formatDuration(totalHours) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const { days, hours } = toDurationParts(totalHours);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          if (!days && !hours) return "0h";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          if (days && hours) return `${days}d ${hours}h`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          if (days) return `${days}d`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          return `${hours}h`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        function formatDaysAxis(totalHours) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const safeHours = Number.isFinite(totalHours) ? Math.max(totalHours, 0) : 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const days = Math.round(safeHours / HOURS_PER_DAY);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          return `${days}d`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const valueLabelPlugin = {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          id: "valueLabelPlugin",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          afterDatasetsDraw(chartInstance) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            const { ctx: chartCtx } = chartInstance;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            const meta = chartInstance.getDatasetMeta(0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            if (!meta || !meta.data) return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            chartCtx.save();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            chartCtx.fillStyle = "rgba(15,23,42,.82)";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            chartCtx.font = "600 10px system-ui, -apple-system, Segoe UI, sans-serif";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            chartCtx.textAlign = "center";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            chartCtx.textBaseline = "bottom";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            meta.data.forEach((bar, index) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              const value = datasetData[index] ?? 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              const label = formatDuration(value);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              chartCtx.fillText(label, bar.x, bar.y - 6);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            chartCtx.restore();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        function getBarGradient(chart) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const { ctx: chartCtx, chartArea } = chart;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          if (!chartArea) return "rgba(11,95,83,.9)";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const gradient = chartCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          gradient.addColorStop(0, "rgba(11,95,83,.98)");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          gradient.addColorStop(1, "rgba(8,75,67,.88)");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          return gradient;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const chart = new Chart(ctx, {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          type: "bar",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          plugins: [valueLabelPlugin],
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          data: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            labels,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            datasets: [
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                label: "Tempo em aberto",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                data: datasetData,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                backgroundColor(context) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  return getBarGradient(context.chart);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                hoverBackgroundColor: "rgba(11,95,83,.92)",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                borderColor: "rgba(7,63,56,.95)",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                borderWidth: 1,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                borderRadius: 0,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                borderSkipped: false,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                barThickness: 24,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                maxBarThickness: 28,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                categoryPercentage: 0.7,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                barPercentage: 0.9,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            ],
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          options: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            responsive: true,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            maintainAspectRatio: false,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            layout: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              padding: { top: 14, right: 10, bottom: 6, left: 6 },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            scales: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              x: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                beginAtZero: true,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                grid: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  display: false,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                ticks: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  autoSkip: false,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  maxRotation: 0,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  minRotation: 0,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  padding: 8,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  color: "rgba(15,23,42,.72)",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  font: { size: 10, weight: "700" },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  callback(value) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    return formatGvProjLabel(value);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                border: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  color: "rgba(15,23,42,.18)",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                title: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  display: true,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  text: "GV_PROJ",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  color: "rgba(15,23,42,.7)",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  font: { size: 11, weight: "800" },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  padding: { top: 8 },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              y: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                beginAtZero: true,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                suggestedMax: ranges.semana.max,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                ticks: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  stepSize: ranges.semana.step,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  padding: 6,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  color: "rgba(15,23,42,.65)",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  font: { size: 10, weight: "700" },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  callback(value) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    return formatDaysAxis(value);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                grid: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  color: "rgba(15,23,42,.08)",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                border: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  color: "rgba(15,23,42,.18)",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                title: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  display: true,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  text: "Dias em aberto",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  color: "rgba(15,23,42,.7)",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  font: { size: 11, weight: "800" },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  padding: { bottom: 6 },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            plugins: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              legend: { display: false },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              tooltip: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                callbacks: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  label(context) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    const entry = entries[context.dataIndex] || {};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    const entryHours = Number(entry.age_hours);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    const baseHours = Number.isFinite(entryHours)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      ? entryHours
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      : Number(context.parsed.y) || 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    const { days, hours, rounded } = toDurationParts(baseHours);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    const dayLabel = days === 1 ? "dia" : "dias";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    const hourLabel = hours === 1 ? "hora" : "horas";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    let timeLabel = "";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    if (days && hours) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      timeLabel = `${days} ${dayLabel} e ${hours} ${hourLabel}`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    } else if (days) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      timeLabel = `${days} ${dayLabel}`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    } else {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      timeLabel = `${hours || rounded} ${hourLabel}`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    const created = entry.created_at
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      ? new Date(entry.created_at).toLocaleDateString("pt-BR", {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                          day: "2-digit",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                          month: "short",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      : "";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    const suffix = created ? ` · Criado em ${created}` : "";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    const labelId = formatGvProjLabel(entry.display_id || entry.label || "");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    return `${labelId}: ${timeLabel}${suffix}`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        function updateRange(rangeKey) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          if (!ranges[rangeKey]) return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          activeRange = rangeKey;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const range = ranges[rangeKey];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          chart.options.scales.y.suggestedMax = range.max;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          chart.options.scales.y.ticks.stepSize = range.step;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          chart.update();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const buttons = document.querySelectorAll(".kpi-chart-filters .kpi-chart-filter");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        buttons.forEach((button) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          button.addEventListener("click", () => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            const key = button.dataset.ageRange;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            if (key === activeRange) return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            buttons.forEach((btn) => btn.classList.toggle("active", btn === button));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            updateRange(key);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        updateRange(activeRange);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  {% endif %}
+  <script>
+    (function () {
+      const payloadEl = document.getElementById("trendPayloadData");
+      const payloadText = payloadEl ? payloadEl.textContent : null;
+      const payload = payloadText
+        ? JSON.parse(payloadText)
+        : { periods: {}, statuses: [], default_period: "mes" };
+      const trendPayload = {
+        periods: payload.periods || {},
+        statuses: Array.isArray(payload.statuses) ? payload.statuses : [],
+        default_period: payload.default_period || "mes",
+        kpis: payload.kpis || {},
+      };
+
+      const defaultStatuses = [
+        {
+          key: "fila",
+          label: "Fila",
+          color: "rgba(11,95,83,.95)",
+          fill: "rgba(11,95,83,.20)",
+        },
+        {
+          key: "retrabalho",
+          label: "Retrabalho",
+          color: "rgba(245,158,11,.95)",
+          fill: "rgba(245,158,11,.15)",
+        },
+      ];
+
+            const allowedStatusKeys = new Set(["fila", "retrabalho"]);
+      const rawStatuses =
+        trendPayload.statuses.length > 0 ? trendPayload.statuses : defaultStatuses;
+      const filteredStatuses = rawStatuses.filter((status) =>
+        allowedStatusKeys.has(status.key)
+      );
+      const statuses = filteredStatuses.length ? filteredStatuses : defaultStatuses;
+      const periods = trendPayload.periods;
+      const defaultPeriodKey = trendPayload.default_period;
+
+      function hasPeriodsData(periodsObj) {
+        if (!periodsObj) return false;
+        return Object.values(periodsObj).some((period) => {
+          const seriesMap = period?.series || {};
+          return Object.values(seriesMap).some((arr) =>
+            Array.isArray(arr) && arr.some((v) => Number(v) !== 0)
+          );
+        });
+      }
+
+      function buildFallbackPeriods() {
+        const fakeStatuses = ["fila", "retrabalho"];
+        const weekLabels = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
+        const weekData = {
+          fila: [24, 23, 22, 22, 21, 20, 20],
+          retrabalho: [9, 9, 10, 10, 11, 11, 12],
+        };
+
+        const monthLabels = ["01", "04", "07", "10", "13", "16", "19", "22", "25", "28", "30"];
+        const monthData = {
+          fila: [22, 21, 20, 20, 19, 19, 20, 21, 22, 21, 20],
+          retrabalho: [9, 9, 10, 10, 10, 11, 11, 11, 10, 10, 10],
+        };
+
+        const yearLabels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+        const yearData = {
+          fila: [21, 20, 20, 19, 19, 19, 20, 21, 22, 21, 20, 20],
+          retrabalho: [10, 10, 10, 10, 10, 10, 11, 11, 11, 11, 10, 10],
+        };
+
+        function toIsoDate(dateObj) {
+          const year = dateObj.getFullYear();
+          const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+          const day = String(dateObj.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        }
+
+        function build(labels, data, dates) {
+          const seriesMap = {};
+          const totals = [];
+          fakeStatuses.forEach((key) => {
+            seriesMap[key] = (data[key] || []).slice(0, labels.length);
+          });
+          labels.forEach((_, idx) => {
+            totals.push(fakeStatuses.reduce((sum, key) => sum + (seriesMap[key][idx] || 0), 0));
+          });
+          return { labels, series: seriesMap, totals, dates };
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const weekDates = [];
+        for (let offset = 6; offset >= 0; offset--) {
+          const date = new Date(today);
+          date.setDate(today.getDate() - offset);
+          weekDates.push(toIsoDate(date));
+        }
+
+        const monthBase = new Date(today.getFullYear(), today.getMonth(), 1);
+        const monthDates = monthLabels.map((label) => {
+          const day = Number(label) || 1;
+          const date = new Date(monthBase.getFullYear(), monthBase.getMonth(), day);
+          return toIsoDate(date);
+        });
+
+        const yearDates = yearLabels.map((_, index) => {
+          const date = new Date(today.getFullYear(), index, 1);
+          return toIsoDate(date);
+        });
+
+        return {
+          semana: build(weekLabels, weekData, weekDates),
+          mes: build(monthLabels, monthData, monthDates),
+          ano: build(yearLabels, yearData, yearDates),
+        };
+      }
+
+      if (!hasPeriodsData(periods)) {
+        trendPayload.periods = buildFallbackPeriods();
+      }
+
+      const periodsEffective = trendPayload.periods;
+      const fallbackPeriod = periodsEffective[defaultPeriodKey] || {};
+
+      const canvas = document.getElementById("projetistaTrendChart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const focusButtons = document.querySelectorAll(".trend-filter[data-period]");
+      const legendButtons = document.querySelectorAll(".trend-legend .trend-item[data-series-key]");
+      const footTotal = document.querySelector("[data-role='total']");
+      const footMedia = document.querySelector("[data-role='media']");
+      const footAprovacao = document.querySelector("[data-role='aprovacao']");
+      const footFinalizacao = document.querySelector("[data-role='finalizacao']");
+      const footTempo = document.querySelector("[data-role='tempo']");
+      const pieTile = document.querySelector(".pie-tile");
+      const pieChart = pieTile ? pieTile.querySelector(".pie-chart") : null;
+      const pieTotal = pieTile ? pieTile.querySelector(".pie-total") : null;
+      const pieSub = pieTile ? pieTile.querySelector(".pie-sub") : null;
+      const pieMetaLabel = pieTile ? pieTile.querySelector("[data-pie-label]") : null;
+      const pieLabelLayer = pieTile ? pieTile.querySelector(".pie-labels") : null;
+      const pieSubBase = pieSub ? pieSub.textContent.trim() : "Total";
+      const pieTotalBase = pieTotal ? Number(pieTotal.textContent) : NaN;
+      const chartWrap = canvas.closest(".trend-chart");
+      const tooltip = chartWrap ? chartWrap.querySelector("[data-trend-tooltip]") : null;
+      const xSelect = chartWrap ? chartWrap.querySelector("[data-trend-x-select]") : null;
+
+      let currentPeriod = defaultPeriodKey;
+      let currentLabels = [];
+      let currentAllDatasets = [];
+      let currentDatasets = [];
+      let currentTotals = [];
+      let currentRawTotals = [];
+      let currentDates = [];
+      let lastPieValues = null;
+      let lastPieSum = 0;
+      let pieLabelRaf = null;
+      let currentXPositions = [];
+      let currentChartHeight = 0;
+      let activeIndex = null;
+      let lockedIndex = null;
+      let defaultIndex = null;
+      let tooltipIndex = null;
+      let tooltipHideTimer = null;
+      const tooltipAutoHideMs = 2500;
+      const activeSeriesKeys = new Set();
+      const chartLeftPad = 28;
+      const pieVarMap = {
+        fila: "--p1",
+        retrabalho: "--p2",
+      };
+      const flowMap = document.querySelector(".flow-map");
+      const flowSvg = flowMap ? flowMap.querySelector(".flow-arrows") : null;
+      let flowRaf = null;
+
+      function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+
+      function getFlowRect(node, mapRect) {
+        const rect = node.getBoundingClientRect();
+        const left = rect.left - mapRect.left;
+        const top = rect.top - mapRect.top;
+        const width = rect.width || 0;
+        const height = rect.height || 0;
+        return {
+          left,
+          top,
+          width,
+          height,
+          right: left + width,
+          bottom: top + height,
+          centerX: left + width / 2,
+          centerY: top + height / 2,
+        };
+      }
+
+      function drawFlowArrows() {
+        if (!flowMap || !flowSvg) return;
+        const startNode = flowMap.querySelector(".node-start");
+        const projNode = flowMap.querySelector(".node-proj");
+        const approveNode = flowMap.querySelector(".node-approve");
+        const retrabalhoNode = flowMap.querySelector(".node-retrabalho");
+        const cancelNode = flowMap.querySelector(".node-cancel");
+        const finalNode = flowMap.querySelector(".node-final");
+        if (!startNode || !projNode || !approveNode || !retrabalhoNode || !cancelNode || !finalNode) {
+          return;
+        }
+
+        const mapRect = flowMap.getBoundingClientRect();
+        if (!mapRect.width || !mapRect.height) return;
+
+        const start = getFlowRect(startNode, mapRect);
+        const proj = getFlowRect(projNode, mapRect);
+        const approve = getFlowRect(approveNode, mapRect);
+        const retrabalho = getFlowRect(retrabalhoNode, mapRect);
+        const cancel = getFlowRect(cancelNode, mapRect);
+        const final = getFlowRect(finalNode, mapRect);
+
+        const edgeOffset = clamp(mapRect.width * 0.008, 4, 10);
+        const overlap = clamp(mapRect.width * 0.006, 2, 8);
+        const colLeft = Math.min(approve.left, retrabalho.left, cancel.left);
+        const colGap = Math.max(0, colLeft - proj.right);
+        const spineX = proj.right + clamp(colGap * 0.35, 12, Math.max(12, colGap - 12));
+
+        const rightmost = Math.max(approve.right, cancel.right);
+        const bracketGap = Math.max(0, final.left - rightmost);
+        let bracketX = rightmost + clamp(bracketGap * 0.45, 12, Math.max(12, bracketGap - 12));
+        const maxBracketX = final.left - edgeOffset - 4;
+        if (bracketX > maxBracketX) {
+          bracketX = maxBracketX;
+        }
+
+        const fmt = (value) => (Number.isFinite(value) ? value.toFixed(1) : "0");
+        const linePlain = (x1, y1, x2, y2) =>
+          `<line x1="${fmt(x1)}" y1="${fmt(y1)}" x2="${fmt(x2)}" y2="${fmt(y2)}"></line>`;
+
+        const parts = [
+          linePlain(start.right - overlap, start.centerY, proj.left + overlap, start.centerY),
+          linePlain(proj.right - overlap, proj.centerY, retrabalho.left + overlap, retrabalho.centerY),
+          linePlain(spineX, approve.centerY, spineX, cancel.centerY),
+          linePlain(spineX, approve.centerY, approve.left + overlap, approve.centerY),
+          linePlain(spineX, cancel.centerY, cancel.left + overlap, cancel.centerY),
+          linePlain(approve.right - overlap, approve.centerY, bracketX, approve.centerY),
+          linePlain(cancel.right - overlap, cancel.centerY, bracketX, cancel.centerY),
+          linePlain(bracketX, approve.centerY, bracketX, cancel.centerY),
+          linePlain(bracketX, final.centerY, final.left + overlap, final.centerY),
+        ];
+
+        flowSvg.setAttribute("viewBox", `0 0 ${mapRect.width} ${mapRect.height}`);
+        flowSvg.innerHTML = `
+          <g stroke="#111827" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+            ${parts.join("")}
+          </g>
+        `;
+      }
+
+      function scheduleFlowArrows() {
+        if (!flowMap || !flowSvg) return;
+        if (flowRaf) {
+          cancelAnimationFrame(flowRaf);
+        }
+        flowRaf = requestAnimationFrame(() => {
+          flowRaf = null;
+          drawFlowArrows();
+        });
+      }
+
+      function safeValue(value) {
+        return Math.max(0, Math.min(100, Number(value) || 0));
+      }
+
+      function parseIsoDate(value) {
+        if (!value || typeof value !== "string") return null;
+        const parts = value.split("-");
+        if (parts.length !== 3) return null;
+        const year = Number(parts[0]);
+        const month = Number(parts[1]);
+        const day = Number(parts[2]);
+        if (!year || !month || !day) return null;
+        return new Date(year, month - 1, day);
+      }
+
+      function formatDayMonthYear(dateObj) {
+        const day = String(dateObj.getDate()).padStart(2, "0");
+        const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const year = dateObj.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+
+      function formatMonthYear(dateObj) {
+        const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const year = dateObj.getFullYear();
+        return `${month}/${year}`;
+      }
+
+      function getPeriodData(periodKey) {
+        return periodsEffective[periodKey] || fallbackPeriod || {};
+      }
+
+      function getRawTotals(periodKey) {
+        const periodData = getPeriodData(periodKey);
+        const totals = Array.isArray(periodData.totals) ? periodData.totals : [];
+        return totals.map((value) => Number(value) || 0);
+      }
+
+      function buildSeries(periodKey) {
+        const periodData = getPeriodData(periodKey);
+        const labels = Array.isArray(periodData.labels) ? periodData.labels : [];
+        const seriesEntries = periodData.series || {};
+        const datasets = statuses.map((status) => {
+          const rawValues = Array.isArray(seriesEntries[status.key])
+            ? seriesEntries[status.key]
+            : [];
+          const values = labels.map((_, index) =>
+            safeValue(rawValues[index])
+          );
+          return {
+            key: status.key,
+            label: status.label,
+            data: values,
+            color: status.color || "rgba(15,23,42,.85)",
+            fill: status.fill || "rgba(15,23,42,.15)",
+          };
+        });
+        let totals = Array.isArray(periodData.totals)
+          ? periodData.totals.map(safeValue)
+          : [];
+        if (!totals.length && labels.length) {
+          totals = labels.map((_, index) =>
+            datasets.reduce((sum, dataset) => sum + (dataset.data[index] || 0), 0)
+          );
+        }
+        return { labels, datasets, totals };
+      }
+
+      function getPeriodDates(periodKey, labels) {
+        const periodData = getPeriodData(periodKey);
+        const dates = Array.isArray(periodData.dates) ? periodData.dates : [];
+        if (dates.length >= labels.length) {
+          return dates.slice(0, labels.length);
+        }
+        return [];
+      }
+
+      function formatSelectedLabel(index) {
+        const rawLabel = currentLabels[index] || "--";
+        const rawDate = currentDates[index];
+        const dateObj = parseIsoDate(rawDate);
+        if (!dateObj) return rawLabel;
+        if (currentPeriod === "ano") {
+          return formatMonthYear(dateObj);
+        }
+        return formatDayMonthYear(dateObj);
+      }
+
+      function renderPieLabels(values, sum) {
+        if (!pieChart || !pieLabelLayer) return;
+        pieLabelLayer.innerHTML = "";
+        const total = Number(sum) || 0;
+        if (!Number.isFinite(total) || total <= 0) return;
+        const radius = pieChart.clientWidth / 2;
+        if (!Number.isFinite(radius) || radius <= 0) return;
+        const innerInset = 32;
+        const labelRadius = Math.max(0, radius - innerInset / 2);
+        let cursor = 0;
+        statuses.forEach((status) => {
+          const rawValue = Math.max(0, Number(values[status.key]) || 0);
+          const sweep = total > 0 ? (rawValue / total) * 360 : 0;
+          const pct = total > 0 ? (rawValue / total) * 100 : 0;
+          if (rawValue <= 0 || pct <= 0) {
+            cursor += sweep;
+            return;
+          }
+          const midAngle = cursor + sweep / 2;
+          const angle = (midAngle - 90) * (Math.PI / 180);
+          const offsetX = Math.cos(angle) * labelRadius;
+          const offsetY = Math.sin(angle) * labelRadius;
+          const label = document.createElement("span");
+          label.className = "pie-label";
+          if (pct < 6) label.classList.add("is-small");
+          label.textContent = pct.toFixed(1) + "%";
+          label.style.transform =
+            "translate(-50%, -50%) translate(" +
+            offsetX.toFixed(1) +
+            "px, " +
+            offsetY.toFixed(1) +
+            "px)";
+          pieLabelLayer.appendChild(label);
+          cursor += sweep;
+        });
+      }
+
+      function schedulePieLabels(values, sum) {
+        if (pieLabelRaf) {
+          cancelAnimationFrame(pieLabelRaf);
+        }
+        pieLabelRaf = requestAnimationFrame(() => {
+          pieLabelRaf = null;
+          renderPieLabels(values, sum);
+        });
+      }
+
+      function getPieValuesFromCss() {
+        if (!pieChart) return {};
+        const style = getComputedStyle(pieChart);
+        const values = {};
+        Object.entries(pieVarMap).forEach(([key, cssVar]) => {
+          const raw = style.getPropertyValue(cssVar) || "0";
+          const parsed = Number(String(raw).replace("%", "").trim());
+          values[key] = Number.isFinite(parsed) ? parsed : 0;
+        });
+        return values;
+      }
+
+      function applyPie(values, total, label) {
+        if (!pieChart) return;
+        let sum = 0;
+        Object.entries(pieVarMap).forEach(([key, cssVar]) => {
+          const rawValue = Number(values[key]) || 0;
+          const safeValue = Math.max(0, rawValue);
+          sum += safeValue;
+          pieChart.style.setProperty(cssVar, safeValue.toFixed(1));
+        });
+        lastPieValues = { ...values };
+        lastPieSum = sum;
+        schedulePieLabels(values, sum);
+        const computedTotal = Number.isFinite(total) ? Math.max(0, Math.round(total)) : Math.round(sum);
+        const totalValue = Number.isFinite(pieTotalBase)
+          ? Math.max(0, Math.round(pieTotalBase))
+          : computedTotal;
+        if (pieTotal) pieTotal.textContent = totalValue.toString();
+        if (pieSub) {
+          pieSub.textContent = pieSubBase;
+        }
+        if (pieMetaLabel) {
+          pieMetaLabel.textContent = label || "--";
+        }
+        pieChart.classList.toggle("pie-empty", totalValue <= 0 || sum <= 0);
+      }
+
+      function updatePieForIndex(index) {
+        if (!pieChart) return;
+        if (!currentLabels.length || !currentAllDatasets.length) return;
+        const safeIndex = Math.max(0, Math.min(index, currentLabels.length - 1));
+        const label = formatSelectedLabel(safeIndex);
+        const values = {};
+        currentAllDatasets.forEach((dataset) => {
+          values[dataset.key] = dataset.data[safeIndex] || 0;
+        });
+        const fallbackTotal = Object.values(values).reduce((sum, value) => sum + (Number(value) || 0), 0);
+        const rawTotal = currentRawTotals[safeIndex];
+        const total = Number.isFinite(rawTotal) ? rawTotal : fallbackTotal;
+        applyPie(values, total, label);
+      }
+
+      function buildSelector(labels) {
+        if (!xSelect) return;
+        xSelect.innerHTML = "";
+        labels.forEach((label, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "trend-x-btn";
+          button.textContent = label;
+          button.dataset.index = String(index);
+          button.addEventListener("click", () => {
+            lockedIndex = lockedIndex === index ? null : index;
+            setActiveIndex(index, true);
+            showTooltip(index);
+            updateSelectorState();
+          });
+          xSelect.appendChild(button);
+        });
+        positionSelector();
+        updateSelectorState();
+      }
+
+      function updateSelectorState() {
+        if (!xSelect) return;
+        const targetIndex = lockedIndex !== null ? lockedIndex : activeIndex;
+        xSelect.querySelectorAll(".trend-x-btn").forEach((button) => {
+          const index = Number(button.dataset.index);
+          button.classList.toggle("active", index === targetIndex);
+        });
+      }
+
+      function positionSelector() {
+        if (!xSelect || !currentXPositions.length) return;
+        const buttons = xSelect.querySelectorAll(".trend-x-btn");
+        buttons.forEach((button) => {
+          const index = Number(button.dataset.index);
+          const x = currentXPositions[index];
+          if (Number.isFinite(x)) {
+            button.style.left = x + "px";
+          }
+        });
+        const step =
+          currentXPositions.length > 1
+            ? Math.abs(currentXPositions[1] - currentXPositions[0])
+            : 0;
+        xSelect.classList.toggle("compact", step > 0 && step < 26);
+      }
+
+      function renderTooltip(index) {
+        if (!tooltip) return;
+        const label = currentLabels[index] || "--";
+        tooltip.innerHTML = "";
+        const title = document.createElement("div");
+        title.className = "trend-tooltip-title";
+        title.textContent = label;
+        tooltip.appendChild(title);
+        currentDatasets.forEach((dataset) => {
+          const row = document.createElement("div");
+          row.className = "trend-tooltip-row";
+          const name = document.createElement("span");
+          name.className = "trend-tooltip-name";
+          const dot = document.createElement("span");
+          dot.className = "trend-tooltip-dot";
+          dot.style.setProperty("--dot-color", dataset.color || "rgba(15,23,42,.7)");
+          const labelSpan = document.createElement("span");
+          labelSpan.textContent = dataset.label;
+          name.appendChild(dot);
+          name.appendChild(labelSpan);
+          const value = document.createElement("strong");
+          const rawValue = Number(dataset.data[index] || 0);
+          value.textContent = rawValue.toFixed(1) + "%";
+          row.appendChild(name);
+          row.appendChild(value);
+          tooltip.appendChild(row);
+        });
+      }
+
+      function getTooltipAnchor(index) {
+        if (!chartWrap || !currentXPositions.length) return null;
+        const chartRect = chartWrap.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
+        const offsetX = canvasRect.left - chartRect.left;
+        const offsetY = canvasRect.top - chartRect.top;
+        const x = offsetX + (currentXPositions[index] ?? 0);
+        const values = currentDatasets.map((dataset) => dataset.data[index] || 0);
+        const maxValue = values.length ? Math.max(...values) : 0;
+        const safeValue = Math.min(100, Math.max(0, maxValue));
+        const y = offsetY + currentChartHeight - (safeValue / 100) * currentChartHeight;
+        return { x, y };
+      }
+
+      function positionTooltip(index) {
+        if (!tooltip || !chartWrap) return;
+        const anchor = getTooltipAnchor(index);
+        if (!anchor) return;
+        tooltip.hidden = false;
+        tooltip.classList.add("is-visible");
+        const containerWidth = chartWrap.clientWidth || 0;
+        const containerHeight = chartWrap.clientHeight || 0;
+        const tooltipWidth = tooltip.offsetWidth || 0;
+        const tooltipHeight = tooltip.offsetHeight || 0;
+        const minLeft = tooltipWidth / 2 + 8;
+        const maxLeft = containerWidth - tooltipWidth / 2 - 8;
+        let left = anchor.x;
+        if (Number.isFinite(minLeft) && Number.isFinite(maxLeft) && maxLeft >= minLeft) {
+          left = Math.min(Math.max(left, minLeft), maxLeft);
+        }
+        tooltip.style.left = left + "px";
+        const minTop = 8;
+        let top = anchor.y;
+        if (top - tooltipHeight - 12 < minTop) {
+          top = tooltipHeight + 12 + minTop;
+        } else if (containerHeight > 0) {
+          top = Math.min(top, containerHeight);
+        }
+        tooltip.style.top = top + "px";
+        tooltip.style.transform = "translate(-50%, calc(-100% - 12px))";
+      }
+
+      function clearTooltipAutoHide() {
+        if (tooltipHideTimer) {
+          clearTimeout(tooltipHideTimer);
+          tooltipHideTimer = null;
+        }
+      }
+
+      function scheduleTooltipAutoHide() {
+        clearTooltipAutoHide();
+        if (lockedIndex === null) return;
+        tooltipHideTimer = setTimeout(() => {
+          lockedIndex = null;
+          hideTooltip();
+        }, tooltipAutoHideMs);
+      }
+
+      function showTooltip(index) {
+        if (!tooltip) return;
+        if (index === null || index === undefined) return;
+        tooltipIndex = index;
+        renderTooltip(index);
+        positionTooltip(index);
+        scheduleTooltipAutoHide();
+      }
+
+      function hideTooltip() {
+        if (!tooltip) return;
+        clearTooltipAutoHide();
+        lockedIndex = null;
+        tooltipIndex = null;
+        tooltip.classList.remove("is-visible");
+        tooltip.hidden = true;
+      }
+
+      function setActiveIndex(index, force) {
+        if (index === null || index === undefined) return;
+        if (!force && index === activeIndex) return;
+        activeIndex = index;
+        updatePieForIndex(index);
+        updateSelectorState();
+      }
+
+      function updateLegendState() {
+        const buttons = document.querySelectorAll(".trend-legend .trend-item[data-series-key]");
+        buttons.forEach((button) => {
+          const key = button.dataset.seriesKey;
+          const hasFilter = activeSeriesKeys.size > 0;
+          const isAll = key === "__all";
+          const isActive = isAll ? !hasFilter : activeSeriesKeys.has(key);
+          button.classList.toggle("is-active", isActive);
+          button.classList.toggle("is-muted", hasFilter && !isActive);
+        });
+      }
+
+      function applyLegendFilter() {
+        if (!currentAllDatasets.length) return;
+        currentDatasets =
+          activeSeriesKeys.size === 0
+            ? currentAllDatasets
+            : currentAllDatasets.filter((dataset) => activeSeriesKeys.has(dataset.key));
+        updateLegendState();
+        drawChart(currentLabels, currentDatasets);
+        updateFoot(currentPeriod);
+        if (tooltipIndex !== null) {
+          showTooltip(tooltipIndex);
+        }
+      }
+
+      function updateFoot(periodKey) {
+        const periodKpis = trendPayload.kpis ? trendPayload.kpis[periodKey] : null;
+
+        function setFallback() {
+          if (footTotal) footTotal.innerHTML = "Total no periodo <strong>--</strong>";
+          if (footMedia) footMedia.innerHTML = "Media de novas por dia <strong>--</strong>";
+          if (footAprovacao) footAprovacao.innerHTML = "% aprovacao <strong>--</strong>";
+          if (footFinalizacao) footFinalizacao.innerHTML = "% finalizacao <strong>--</strong>";
+          if (footTempo) footTempo.innerHTML = "Tempo medio ate finalizar (dias) <strong>--</strong>";
+        }
+
+        if (!periodKpis) {
+          setFallback();
+          return;
+        }
+
+        const totalNovas = Number(periodKpis.total_novas) || 0;
+        const mediaDia = Number(periodKpis.media_por_dia);
+        const aprovacaoPct = Number(periodKpis.aprovacao_pct);
+        const finalizacaoPct = Number(periodKpis.finalizacao_pct);
+        const tempoMedio = periodKpis.tempo_medio_dias;
+
+        if (footTotal) footTotal.innerHTML = "Total no periodo <strong>" + totalNovas + "</strong>";
+        if (footMedia) {
+          const mediaText = Number.isFinite(mediaDia) ? mediaDia.toFixed(1) : "0";
+          footMedia.innerHTML = "Media de novas por dia <strong>" + mediaText + "</strong>";
+        }
+        if (footAprovacao) {
+          const aprovacaoText = Number.isFinite(aprovacaoPct) ? aprovacaoPct.toFixed(1) : "0";
+          footAprovacao.innerHTML = "% aprovacao <strong>" + aprovacaoText + "%</strong>";
+        }
+        if (footFinalizacao) {
+          const finalizacaoText = Number.isFinite(finalizacaoPct) ? finalizacaoPct.toFixed(1) : "0";
+          footFinalizacao.innerHTML = "% finalizacao <strong>" + finalizacaoText + "%</strong>";
+        }
+        if (footTempo) {
+          const tempoText =
+            tempoMedio === null || tempoMedio === undefined
+              ? "--"
+              : Number(tempoMedio).toFixed(1);
+          footTempo.innerHTML =
+            "Tempo medio ate finalizar (dias) <strong>" + tempoText + "</strong>";
+        }
+      }
+
+      function setActiveButton(periodKey) {
+        focusButtons.forEach((button) => {
+          button.classList.toggle("active", button.dataset.period === periodKey);
+        });
+      }
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const targetWidth = rect.width || canvas.clientWidth || 640;
+        const targetHeight = rect.height || canvas.clientHeight || 260;
+        canvas.width = targetWidth * dpr;
+        canvas.height = targetHeight * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function drawAxes(width, height) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.strokeStyle = "rgba(15,23,42,.08)";
+        ctx.lineWidth = 1;
+        const horizontalLines = 4;
+        ctx.font = "10px 'Inter', system-ui, sans-serif";
+        ctx.fillStyle = "rgba(15,23,42,.72)";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        const labelPadding = 6;
+        const axisLeft = chartLeftPad;
+        for (let i = 0; i <= horizontalLines; i++) {
+          const y = (height / horizontalLines) * i;
+          ctx.beginPath();
+          ctx.moveTo(axisLeft, y);
+          ctx.lineTo(width, y);
+          ctx.stroke();
+          const value = Math.round(100 - (100 / horizontalLines) * i);
+          const labelY = Math.min(height - 6, Math.max(6, y));
+          ctx.fillText(value + "%", axisLeft - labelPadding, labelY);
+        }
+        ctx.restore();
+      }
+
+      function getLineXPositions(width, labelCount) {
+        const margin = chartLeftPad;
+        if (labelCount <= 1) {
+          return [margin + Math.max(width - margin * 2, 0) / 2];
+        }
+        const span = Math.max(width - margin * 2, 0);
+        const step = span / (labelCount - 1);
+        return Array.from({ length: labelCount }, (_, index) => margin + step * index);
+      }
+
+      function drawMarkers(dataset, xPositions, height, color) {
+        ctx.save();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = color;
+        ctx.fillStyle = "#fff";
+        dataset.data.forEach((value, idx) => {
+          const px = xPositions[idx];
+          const py = height - (Math.min(100, Math.max(0, value)) / 100) * height;
+          ctx.beginPath();
+          ctx.arc(px, py, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+
+      function drawLines(labels, datasets, width, height, xPositions) {
+        if (!labels.length || !datasets.length) return;
+        datasets.forEach((dataset) => {
+          if (!dataset.data.length) return;
+          ctx.save();
+          ctx.strokeStyle = dataset.color;
+          ctx.fillStyle = dataset.fill;
+          ctx.lineWidth = 2;
+          ctx.lineJoin = "round";
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          dataset.data.forEach((value, idx) => {
+            const px = xPositions[idx];
+            const py = height - (Math.min(100, Math.max(0, value)) / 100) * height;
+            if (idx === 0) {
+              ctx.moveTo(px, py);
+            } else {
+              ctx.lineTo(px, py);
+            }
+          });
+          ctx.stroke();
+          const startX = xPositions[0] || 0;
+          const endX = xPositions[xPositions.length - 1] || startX;
+          ctx.lineTo(endX, height);
+          ctx.lineTo(startX, height);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+          drawMarkers(dataset, xPositions, height, dataset.color);
+        });
+      }
+
+      function drawXAxisLabels(labels, xPositions, height, width) {
+        if (!labels.length || !xPositions.length) return;
+        const axisMargin = chartLeftPad;
+        ctx.save();
+        ctx.strokeStyle = "rgba(15,23,42,.22)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(axisMargin, height);
+        ctx.lineTo(Math.max(width - axisMargin, axisMargin), height);
+        ctx.stroke();
+        ctx.restore();
+
+        if (xSelect) return;
+
+        ctx.save();
+        ctx.fillStyle = "rgba(15,23,42,.65)";
+        ctx.font = "10px 'Inter', system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        const maxVisibleLabels = 12;
+        const step = Math.max(1, Math.ceil(labels.length / maxVisibleLabels));
+        const labelIndexes = [];
+        for (let i = 0; i < labels.length; i += step) {
+          labelIndexes.push(i);
+        }
+        const lastIndex = labels.length - 1;
+        if (!labelIndexes.includes(lastIndex)) {
+          labelIndexes.push(lastIndex);
+        }
+        const labelY = height + 6;
+        labelIndexes.forEach((index) => {
+          const x = xPositions[index] ?? axisMargin;
+          ctx.fillText(labels[index], x, labelY);
+        });
+        ctx.restore();
+      }
+
+      function drawChart(labels, datasets) {
+        if (!labels.length) return;
+        resizeCanvas();
+        const rawHeight = canvas.height / (window.devicePixelRatio || 1);
+        const width = canvas.width / (window.devicePixelRatio || 1);
+        const bottomMargin = 34;
+        const chartHeight = Math.max(0, rawHeight - bottomMargin);
+        const xPositions = getLineXPositions(width, labels.length);
+        currentXPositions = xPositions;
+        currentChartHeight = chartHeight;
+        drawAxes(width, chartHeight);
+        if (datasets.length) {
+          drawLines(labels, datasets, width, chartHeight, xPositions);
+        }
+        drawXAxisLabels(labels, xPositions, chartHeight, width);
+      }
+
+      function refresh(periodKey) {
+        currentPeriod = periodKey;
+        const { labels, datasets, totals } = buildSeries(periodKey);
+        currentLabels = labels;
+        currentAllDatasets = datasets;
+        currentDatasets = datasets;
+        currentTotals = totals;
+        currentRawTotals = getRawTotals(periodKey);
+        currentDates = getPeriodDates(periodKey, labels);
+        updateFoot(periodKey);
+        drawChart(labels, datasets);
+        buildSelector(labels);
+        setActiveButton(periodKey);
+        defaultIndex = labels.length ? labels.length - 1 : null;
+        lockedIndex = null;
+        hideTooltip();
+        if (defaultIndex !== null) {
+          setActiveIndex(defaultIndex, true);
+        } else if (pieMetaLabel) {
+          pieMetaLabel.textContent = "--";
+        }
+        applyLegendFilter();
+        if (pieLabelLayer && !pieLabelLayer.children.length) {
+          const cssValues = getPieValuesFromCss();
+          const sum = Object.values(cssValues).reduce((acc, value) => acc + (Number(value) || 0), 0);
+          if (sum > 0) {
+            lastPieValues = { ...cssValues };
+            lastPieSum = sum;
+            schedulePieLabels(cssValues, sum);
+          }
+        }
+        if (pieMetaLabel && pieMetaLabel.textContent.trim() === "--" && defaultIndex !== null) {
+          pieMetaLabel.textContent = formatSelectedLabel(defaultIndex);
+        }
+      }
+
+      function getIndexFromEvent(event) {
+        if (!currentXPositions.length) return null;
+        const rect = canvas.getBoundingClientRect();
+        const clientX = event.clientX;
+        const clientY = event.clientY;
+        if (typeof clientX !== "number" || typeof clientY !== "number") return null;
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        if (y < 0 || y > currentChartHeight + 12) return null;
+        let closestIndex = 0;
+        let minDistance = Infinity;
+        currentXPositions.forEach((pos, idx) => {
+          const distance = Math.abs(x - pos);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestIndex = idx;
+          }
+        });
+        return closestIndex;
+      }
+
+      function isPointerNearPoint(event, index) {
+        if (!currentXPositions.length || !currentDatasets.length) return false;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const threshold = 10;
+        const px = currentXPositions[index];
+        return currentDatasets.some((dataset) => {
+          const value = dataset.data[index] || 0;
+          const py = currentChartHeight - (Math.min(100, Math.max(0, value)) / 100) * currentChartHeight;
+          const dx = x - px;
+          const dy = y - py;
+          return dx * dx + dy * dy <= threshold * threshold;
+        });
+      }
+
+      function handleMove(event) {
+        if (lockedIndex !== null) return;
+        const index = getIndexFromEvent(event);
+        if (index === null) {
+          hideTooltip();
+          return;
+        }
+        setActiveIndex(index);
+        if (isPointerNearPoint(event, index)) {
+          showTooltip(index);
+        } else {
+          hideTooltip();
+        }
+      }
+
+      function handleClick(event) {
+        const index = getIndexFromEvent(event);
+        if (index === null) return;
+        lockedIndex = lockedIndex === index ? null : index;
+        setActiveIndex(index, true);
+        showTooltip(index);
+      }
+
+      function handleLeave() {
+        if (lockedIndex !== null) {
+          setActiveIndex(lockedIndex, true);
+          showTooltip(lockedIndex);
+          return;
+        }
+        if (defaultIndex !== null) {
+          setActiveIndex(defaultIndex, true);
+        }
+        hideTooltip();
+      }
+
+      legendButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const key = button.dataset.seriesKey;
+          if (!key) return;
+          if (key === "__all") {
+            activeSeriesKeys.clear();
+            applyLegendFilter();
+            return;
+          }
+          if (activeSeriesKeys.has(key) && activeSeriesKeys.size === 1) {
+            activeSeriesKeys.clear();
+          } else {
+            activeSeriesKeys.clear();
+            activeSeriesKeys.add(key);
+          }
+          applyLegendFilter();
+        });
+      });
+
+      focusButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const period = button.dataset.period || defaultPeriodKey;
+          if (period === currentPeriod) return;
+          refresh(period);
+        });
+      });
+
+      canvas.addEventListener("mousemove", handleMove);
+      canvas.addEventListener("click", handleClick);
+      canvas.addEventListener("mouseleave", handleLeave);
+
+      window.addEventListener("resize", () => {
+        scheduleFlowArrows();
+        if (!currentLabels.length || !currentDatasets.length) return;
+        drawChart(currentLabels, currentDatasets);
+        positionSelector();
+        if (tooltipIndex !== null) {
+          showTooltip(tooltipIndex);
+        }
+        if (lastPieValues) {
+          schedulePieLabels(lastPieValues, lastPieSum);
+        }
+      });
+
+      scheduleFlowArrows();
+      refresh(defaultPeriodKey);
+    })();
+  </script>
+  {% if solicitante_chart_entries %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+      (function () {
+        if (typeof Chart === "undefined") return;
+
+        const payloadEl = document.getElementById("projetista-age-data");
+        if (!payloadEl) return;
+
+        const entries = JSON.parse(payloadEl.textContent || "[]") || [];
+        if (!entries.length) return;
+
+        const canvas = document.getElementById("projetistaAgeChart");
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        const HOURS_PER_DAY = 24;
+        let activeProjetista = "__all";
+
+        function formatGvProjLabel(value) {
+          const text = String(value || "").trim();
+          if (!/^\d{5,}$/.test(text)) return text;
+          const year = text.slice(0, 4);
+          const seq = text.slice(4);
+          if (!/^\d+$/.test(seq)) return text;
+          return year + seq.padStart(2, "0");
+        }
+
+        function normalizeProjetista(value) {
+          const text = String(value || "").trim();
+          return text || "Sem projetista";
+        }
+
+        function shortLabel(value) {
+          const text = String(value || "").trim();
+          if (text.length <= 16) return text;
+          return text.slice(0, 13).trim() + "...";
+        }
+
+        function buildGroups(list) {
+          if (!list.length) return [];
+          const groups = [];
+          let start = 0;
+          let current = normalizeProjetista(list[0].projetista_label);
+          for (let i = 0; i < list.length; i += 1) {
+            const label = normalizeProjetista(list[i].projetista_label);
+            if (label !== current) {
+              groups.push({ label: current, start, end: i - 1 });
+              current = label;
+              start = i;
+            }
+          }
+          groups.push({ label: current, start, end: list.length - 1 });
+          return groups;
+        }
+
+        const ageItemsEl = document.querySelector("[data-age-items]");
+        const ageEmptyEl = document.querySelector("[data-age-empty]");
+
+        function getAgeHoursStatic(entry) {
+          const ageHours = Number(entry.age_hours);
+          if (Number.isFinite(ageHours)) return ageHours;
+          const ageDays = Number(entry.age_days) || 0;
+          return ageDays * HOURS_PER_DAY;
+        }
+
+        function getAgeSecondsLive(entry) {
+          const createdAt = entry && entry.created_at ? new Date(entry.created_at) : null;
+          if (createdAt && !Number.isNaN(createdAt.getTime())) {
+            const diffMs = Date.now() - createdAt.getTime();
+            return Math.max(0, Math.round(diffMs / 1000));
+          }
+          return Math.max(0, Math.round(getAgeHoursStatic(entry) * 3600));
+        }
+
+        function getDatasetData(list) {
+          return list.map((entry) => {
+            return getAgeHoursStatic(entry);
+          });
+        }
+
+        function getLabels(list) {
+          return list.map((entry) => formatGvProjLabel(entry.display_id || entry.label));
+        }
+
+        function getYAxisConfig(data) {
+          const maxValue = Math.max(0, ...data);
+          const roundedMax = Math.max(HOURS_PER_DAY, Math.ceil(maxValue / HOURS_PER_DAY) * HOURS_PER_DAY);
+          const step = roundedMax <= 7 * HOURS_PER_DAY ? HOURS_PER_DAY : 2 * HOURS_PER_DAY;
+          return { max: roundedMax, step };
+        }
+
+        function filterEntries(list, projetista) {
+          if (!projetista || projetista === "__all") return list;
+          return list.filter(
+            (entry) => normalizeProjetista(entry.projetista_label) === projetista
+          );
+        }
+
+        let ageTickerId = null;
+
+        function renderAgeList(list) {
+          if (!ageItemsEl) return;
+          const sorted = list
+            .slice()
+            .sort((a, b) => getAgeSecondsLive(b) - getAgeSecondsLive(a))
+            .slice(0, 6);
+          ageItemsEl.innerHTML = "";
+          if (!sorted.length) {
+            if (ageEmptyEl) ageEmptyEl.hidden = false;
+            return;
+          }
+          if (ageEmptyEl) ageEmptyEl.hidden = true;
+          sorted.forEach((entry) => {
+            const totalSeconds = getAgeSecondsLive(entry);
+            const daysCount = Math.floor(totalSeconds / 86400);
+            const remainder = totalSeconds % 86400;
+            const hours = Math.floor(remainder / 3600);
+            const minutes = Math.floor((remainder % 3600) / 60);
+            const seconds = remainder % 60;
+            const dayLabel = daysCount === 1 ? "dia" : "dias";
+            const timeLabel = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+            const item = document.createElement("div");
+            item.className = "kpi-age-item";
+
+            const main = document.createElement("div");
+            main.className = "kpi-age-main";
+
+            const gv = document.createElement("div");
+            gv.className = "kpi-age-gv";
+            gv.textContent = `GV_PROJ ${entry.display_id || "-"}`;
+
+            const created = document.createElement("div");
+            created.className = "kpi-age-meta";
+            created.textContent = `Criado ${entry.created_label || "-"}`;
+
+            const proj = document.createElement("div");
+            proj.className = "kpi-age-meta";
+            proj.textContent = `Projetista ${normalizeProjetista(entry.projetista_label)}`;
+
+            main.appendChild(gv);
+            main.appendChild(created);
+            main.appendChild(proj);
+
+            const daysBadge = document.createElement("div");
+            daysBadge.className = "kpi-age-days";
+            daysBadge.textContent = `${daysCount} ${dayLabel} ${timeLabel}`;
+
+            item.appendChild(main);
+            item.appendChild(daysBadge);
+            ageItemsEl.appendChild(item);
+          });
+        }
+
+        let currentEntries = entries.slice();
+        let datasetData = getDatasetData(currentEntries);
+        let labels = getLabels(currentEntries);
+        let groups = buildGroups(currentEntries);
+
+        function toDurationParts(totalHours) {
+          const safeHours = Number.isFinite(totalHours) ? Math.max(totalHours, 0) : 0;
+          const rounded = Math.round(safeHours);
+          const days = Math.floor(rounded / HOURS_PER_DAY);
+          const hours = rounded % HOURS_PER_DAY;
+          return { days, hours, rounded };
+        }
+
+        function formatDuration(totalHours) {
+          const { days, hours } = toDurationParts(totalHours);
+          if (!days && !hours) return "0h";
+          if (days && hours) return `${days}d ${hours}h`;
+          if (days) return `${days}d`;
+          return `${hours}h`;
+        }
+
+        function formatDaysAxis(totalHours) {
+          const safeHours = Number.isFinite(totalHours) ? Math.max(totalHours, 0) : 0;
+          const days = Math.round(safeHours / HOURS_PER_DAY);
+          return `${days}d`;
+        }
+
+        const valueLabelPlugin = {
+          id: "valueLabelPlugin",
+          afterDatasetsDraw(chartInstance) {
+            const { ctx: chartCtx } = chartInstance;
+            const meta = chartInstance.getDatasetMeta(0);
+            if (!meta || !meta.data) return;
+            chartCtx.save();
+            chartCtx.fillStyle = "rgba(15,23,42,.82)";
+            chartCtx.font = "600 10px system-ui, -apple-system, Segoe UI, sans-serif";
+            chartCtx.textAlign = "center";
+            chartCtx.textBaseline = "bottom";
+            meta.data.forEach((bar, index) => {
+              const value = datasetData[index] ?? 0;
+              const label = formatDuration(value);
+              chartCtx.fillText(label, bar.x, bar.y - 6);
+            });
+            chartCtx.restore();
+          },
+        };
+
+        const groupPlugin = {
+          id: "groupPlugin",
+          afterDatasetsDraw(chartInstance) {
+            const { ctx: chartCtx, chartArea, scales } = chartInstance;
+            if (!chartArea || !scales || !scales.x || !groups.length) return;
+            const xScale = scales.x;
+
+            chartCtx.save();
+            chartCtx.strokeStyle = "rgba(15,23,42,.28)";
+            chartCtx.setLineDash([4, 4]);
+            chartCtx.lineWidth = 1;
+
+            groups.forEach((group, index) => {
+              if (index === groups.length - 1) return;
+              const endPixel = xScale.getPixelForValue(group.end);
+              const nextPixel = xScale.getPixelForValue(group.end + 1);
+              const boundary = (endPixel + nextPixel) / 2;
+              chartCtx.beginPath();
+              chartCtx.moveTo(boundary, chartArea.top + 8);
+              chartCtx.lineTo(boundary, chartArea.bottom);
+              chartCtx.stroke();
+            });
+
+            chartCtx.setLineDash([]);
+            chartCtx.fillStyle = "rgba(15,23,42,.85)";
+            chartCtx.font = "700 10px system-ui, -apple-system, Segoe UI, sans-serif";
+            chartCtx.textAlign = "center";
+            chartCtx.textBaseline = "top";
+            groups.forEach((group) => {
+              const startPixel = xScale.getPixelForValue(group.start);
+              const endPixel = xScale.getPixelForValue(group.end);
+              const center = (startPixel + endPixel) / 2;
+            chartCtx.fillText(shortLabel(group.label), center, Math.max(chartArea.top - 26, 6));
+            });
+            chartCtx.restore();
+          },
+        };
+
+        function getBarGradient(chart) {
+          const { ctx: chartCtx, chartArea } = chart;
+          if (!chartArea) return "rgba(11,95,83,.9)";
+          const gradient = chartCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          gradient.addColorStop(0, "rgba(11,95,83,.98)");
+          gradient.addColorStop(1, "rgba(8,75,67,.88)");
+          return gradient;
+        }
+
+        const chart = new Chart(ctx, {
+          type: "bar",
+          plugins: [valueLabelPlugin, groupPlugin],
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Tempo em aberto",
+                data: datasetData,
+                backgroundColor(context) {
+                  return getBarGradient(context.chart);
+                },
+                hoverBackgroundColor: "rgba(11,95,83,.92)",
+                borderColor: "rgba(7,63,56,.95)",
+                borderWidth: 1,
+                borderRadius: 0,
+                borderSkipped: false,
+                barThickness: 24,
+                maxBarThickness: 28,
+                categoryPercentage: 0.7,
+                barPercentage: 0.9,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+              padding: { top: 52, right: 10, bottom: 6, left: 6 },
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                grid: {
+                  display: false,
+                },
+                ticks: {
+                  autoSkip: false,
+                  maxRotation: 0,
+                  minRotation: 0,
+                  padding: 8,
+                  color: "rgba(15,23,42,.72)",
+                  font: { size: 10, weight: "700" },
+                  callback(value) {
+                    const label = this.getLabelForValue(value);
+                    return formatGvProjLabel(label);
+                  },
+                },
+                border: {
+                  color: "rgba(15,23,42,.18)",
+                },
+                title: {
+                  display: true,
+                  text: "Nº do GV PROJ",
+                  color: "rgba(15,23,42,.7)",
+                  font: { size: 11, weight: "800" },
+                  padding: { top: 8 },
+                },
+              },
+              y: {
+                beginAtZero: true,
+                suggestedMax: getYAxisConfig(datasetData).max,
+                ticks: {
+                  stepSize: getYAxisConfig(datasetData).step,
+                  padding: 6,
+                  color: "rgba(15,23,42,.65)",
+                  font: { size: 10, weight: "700" },
+                  callback(value) {
+                    return formatDaysAxis(value);
+                  },
+                },
+                grid: {
+                  color: "rgba(15,23,42,.08)",
+                },
+                border: {
+                  color: "rgba(15,23,42,.18)",
+                },
+                title: {
+                  display: true,
+                  text: "Dias em aberto",
+                  color: "rgba(15,23,42,.7)",
+                  font: { size: 11, weight: "800" },
+                  padding: { bottom: 6 },
+                },
+              },
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label(context) {
+                    const entry = currentEntries[context.dataIndex] || {};
+                    const entryHours = Number(entry.age_hours);
+                    const baseHours = Number.isFinite(entryHours)
+                      ? entryHours
+                      : Number(context.parsed.y) || 0;
+                    const { days, hours, rounded } = toDurationParts(baseHours);
+                    const dayLabel = days === 1 ? "dia" : "dias";
+                    const hourLabel = hours === 1 ? "hora" : "horas";
+                    let timeLabel = "";
+                    if (days && hours) {
+                      timeLabel = `${days} ${dayLabel} e ${hours} ${hourLabel}`;
+                    } else if (days) {
+                      timeLabel = `${days} ${dayLabel}`;
+                    } else {
+                      timeLabel = `${hours || rounded} ${hourLabel}`;
+                    }
+                    const created = entry.created_at
+                      ? new Date(entry.created_at).toLocaleDateString("pt-BR", {
+                          day: "2-digit",
+                          month: "short",
+                        })
+                      : "";
+                    const suffix = created ? ` · Criado em ${created}` : "";
+                    const labelId = formatGvProjLabel(entry.display_id || entry.label || "");
+                    return `${labelId}: ${timeLabel}${suffix}`;
+                  },
+                  afterLabel(context) {
+                    const entry = currentEntries[context.dataIndex] || {};
+                    const projetista = normalizeProjetista(entry.projetista_label);
+                    return projetista ? `Projetista: ${projetista}` : "";
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        function startAgeTicker() {
+          if (ageTickerId) return;
+          ageTickerId = window.setInterval(() => {
+            renderAgeList(currentEntries);
+          }, 1000);
+        }
+
+        function updateChart() {
+          datasetData = getDatasetData(currentEntries);
+          labels = getLabels(currentEntries);
+          groups = buildGroups(currentEntries);
+          chart.data.labels = labels;
+          chart.data.datasets[0].data = datasetData;
+          const yConfig = getYAxisConfig(datasetData);
+          chart.options.scales.y.suggestedMax = yConfig.max;
+          chart.options.scales.y.ticks.stepSize = yConfig.step;
+          chart.update();
+          renderAgeList(currentEntries);
+          startAgeTicker();
+        }
+
+        function renderProjetistaFilters() {
+          const filterWrap = document.querySelector("[data-projetista-filters]");
+          if (!filterWrap) return;
+          filterWrap.innerHTML = "";
+          const seen = new Set();
+          const list = [];
+          entries.forEach((entry) => {
+            const label = normalizeProjetista(entry.projetista_label);
+            if (!seen.has(label)) {
+              seen.add(label);
+              list.push(label);
+            }
+          });
+
+          function addButton(label, value, isActive) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "kpi-chart-filter" + (isActive ? " active" : "");
+            button.textContent = label;
+            button.dataset.projetista = value;
+            button.addEventListener("click", () => {
+              if (activeProjetista === value) return;
+              activeProjetista = value;
+              const buttons = filterWrap.querySelectorAll(".kpi-chart-filter");
+              buttons.forEach((btn) => btn.classList.toggle("active", btn === button));
+              currentEntries = filterEntries(entries, activeProjetista);
+              updateChart();
+            });
+            filterWrap.appendChild(button);
+          }
+
+          addButton("Todos", "__all", true);
+          list.forEach((label) => {
+            addButton(label, label, false);
+          });
+        }
+
+        renderProjetistaFilters();
+        updateChart();
+      })();
+    </script>
+  {% endif %}

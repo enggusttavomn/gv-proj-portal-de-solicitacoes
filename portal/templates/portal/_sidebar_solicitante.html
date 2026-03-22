@@ -1,0 +1,29 @@
+{% if admin_mode %}
+  {% include "portal/_sidebar_admin.html" %}
+{% else %}
+<div class="navsec">PAINEL</div>
+<nav class="nav">
+  {% with url_name=request.resolver_match.url_name %}
+    <a class="{% if url_name == 'dashboard_solicitante' or url_name == 'solicitante_dashboard' %}active{% endif %}"
+       href="{% url 'dashboard_solicitante' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-dashboard"></use></svg></div>Dashboard
+    </a>
+
+    <a class="{% if url_name == 'novo_apontamento' %}active{% endif %}"
+       href="{% url 'novo_apontamento' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-plus"></use></svg></div>Nova solicitacao
+    </a>
+
+    <a class="{% if url_name == 'status_do_projeto' %}active{% endif %}"
+       href="{% url 'status_do_projeto' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-activity"></use></svg></div>Controle de projetos
+    </a>
+  
+    <a class="{% if url_name == 'retorno_final' %}active{% endif %}"
+       href="{% url 'retorno_final' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-activity"></use></svg></div>Retorno final
+    </a>
+{% endwith %}
+</nav>
+{% endif %}
+

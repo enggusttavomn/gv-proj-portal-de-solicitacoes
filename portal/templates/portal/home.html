@@ -1,0 +1,39 @@
+{#
+  Template: portal/templates/portal/home.html
+  Objetivo: Tela do portal: home.
+  Herda: n?o aplica (template base ou p?gina completa).
+  Blocos: nenhum.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GV_PROJ</title>
+</head>
+<body>
+  <h1>GV_PROJ</h1>
+
+  <p>Home carregando via template ✅</p>
+  <p>Logado como: {{ request.user.username }}</p>
+
+  <hr>
+
+  <ul>
+    <li><a href="{% url 'novo_apontamento' %}">Novo apontamento</a></li>
+    <li><a href="{% url 'tabela_consulta' %}">Tabela consulta</a></li>
+    <li><a href="{% url 'registro' %}">Registro (placeholder)</a></li>
+    <li><a href="{% url 'placeholder' %}">Página (placeholder)</a></li>
+    <li><a href="{% url 'configuracoes' %}">Configurações</a></li>
+  </ul>
+
+  <hr>
+
+  <form method="post" action="{% url 'logout' %}" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit">Sair</button>
+  </form>
+</body>
+</html>
+

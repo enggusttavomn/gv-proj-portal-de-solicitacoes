@@ -1,0 +1,23 @@
+{% with current=request.resolver_match.url_name %}
+  <div class="navsec">PAINEL</div>
+  <nav class="nav">
+    <a class="{% if current == 'dashboard_solicitante' or current == 'solicitante_dashboard' %}active{% endif %}"
+       href="{% url 'dashboard_solicitante' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-dashboard"></use></svg></div>Dashboard
+    </a>
+
+    <div class="navsec" style="margin-top:12px;">SOLICITACOES</div>
+
+    <a class="{% if current == 'novo_apontamento' %}active{% endif %}" href="{% url 'novo_apontamento' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-plus"></use></svg></div>Nova solicitacao
+    </a>
+
+    <a class="{% if current == 'status_do_projeto' %}active{% endif %}" href="{% url 'status_do_projeto' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-inbox"></use></svg></div>Controle de Projetos
+    </a>
+
+    <a class="{% if current == 'retorno_final' %}active{% endif %}" href="{% url 'retorno_final' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-activity"></use></svg></div>Retorno final
+    </a>
+  </nav>
+{% endwith %}

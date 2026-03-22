@@ -1,0 +1,54 @@
+{% load static %}
+{#
+  Template: templates/registration/login__OLD.html
+  Objetivo: Tela de autentica??o/registro: login  OLD.
+  Herda: n?o aplica (template base ou p?gina completa).
+  Blocos: nenhum.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GV_PROJ - Login</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+
+<body>
+  <!-- Logo GE “no fundo” -->
+  <img class="ge-logo-bg" src="{% static 'img/ge_vernova.png' %}" alt="GE Vernova">
+
+  <main class="page">
+    <section class="card">
+
+      <!-- Ícone estilo Lean -->
+      <div class="brand-icon" aria-hidden="true">
+        <span>GV</span>
+      </div>
+
+      <h1>GV_PROJ</h1>
+      <p class="subtitle">Selecione o usuário e digite a senha.</p>
+
+      {% if erro %}
+        <div class="error">{{ erro }}</div>
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+
+        <label for="id_username">Usuário</label>
+        {{ form.username }}
+
+        <label for="id_password">Senha</label>
+        {{ form.password }}
+
+        <button class="btn" type="submit">Entrar</button>
+
+        <p class="hint">A criação de usuários será feita dentro do painel do ADMIN.</p>
+      </form>
+    </section>
+  </main>
+</body>
+</html>
+

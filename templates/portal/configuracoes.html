@@ -1,0 +1,395 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/configuracoes.html
+  Objetivo: Tela do portal: configuracoes.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}Configuracoes | GV_PROJ{% endblock %}
+
+{% block sidebar %}
+  {% if sidebar_template %}
+    {% include sidebar_template %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  <style>
+    .settings-hero{
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .settings-hero .hero-text,
+    .settings-hero .hero-tags{
+      position: relative;
+      z-index: 1;
+    }
+
+    .settings-hero::after{
+      content: "";
+      position: absolute;
+      right: -140px;
+      top: -120px;
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(circle, rgba(255,255,255,.18), transparent 65%);
+      opacity: .9;
+      pointer-events: none;
+    }
+
+    .hero-eyebrow{
+      font-size: 11px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: rgba(234,242,239,.75);
+    }
+
+    .settings-hero h2{
+      margin-top: 6px;
+    }
+
+    .hero-tags{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .hero-tag{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.26);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .settings-grid{
+      margin-top: 16px;
+    }
+
+    .profile-card{
+      grid-column: span 6;
+    }
+
+    .photo-card{
+      grid-column: span 6;
+    }
+
+    .access-card{
+      grid-column: span 5;
+    }
+
+    .tile h3{
+      margin: 0 0 6px;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .tile p{
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .info-list{
+      display: grid;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .info-row{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px dashed rgba(17,24,39,.12);
+      font-size: 13px;
+    }
+
+    .info-row:last-child{
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .info-label{
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .info-value{
+      font-weight: 800;
+      color: var(--text);
+      text-align: right;
+    }
+
+    .group-chips{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .group-chip{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(11,95,83,.1);
+      color: var(--green);
+      border: 1px solid rgba(11,95,83,.18);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .photo-layout{
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 200px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .photo-form{
+      display: grid;
+      gap: 12px;
+    }
+
+    .photo-form .field{
+      display: grid;
+      gap: 6px;
+    }
+
+    .photo-form label{
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: .2px;
+    }
+
+    .photo-form input[type="file"]{
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(17,24,39,.16);
+      background: rgba(255,255,255,.9);
+    }
+
+    .field-hint{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .photo-actions{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .photo-preview{
+      border-radius: 16px;
+      border: 1px dashed rgba(11,95,83,.28);
+      background: rgba(11,95,83,.08);
+      padding: 16px;
+      text-align: center;
+      display: grid;
+      gap: 6px;
+      align-content: start;
+    }
+
+    .preview-avatar{
+      width: 88px;
+      height: 88px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.7);
+      border: 1px solid rgba(11,95,83,.25);
+      margin: 0 auto 6px;
+      display: grid;
+      place-items: center;
+      color: var(--green);
+      font-weight: 900;
+      font-size: 18px;
+      overflow: hidden;
+    }
+
+    .preview-avatar img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .preview-title{
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .preview-desc{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .notice{
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .notice.ok{
+      background: #ecfdf5;
+      border: 1px solid #bbf7d0;
+      color: #065f46;
+    }
+
+    .notice.err{
+      background: #fff1f2;
+      border: 1px solid #fecdd3;
+      color: #9f1239;
+    }
+
+    .btn{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: var(--green);
+      color: #f8fafc;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover{ filter: brightness(.98); }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn-secondary{
+      background: rgba(15,23,42,.08);
+      border-color: rgba(15,23,42,.08);
+      color: #0f172a;
+    }
+
+    .access-actions{
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 1100px){
+      .profile-card,
+      .photo-card,
+      .tips-card,
+      .access-card{
+        grid-column: span 12;
+      }
+      .photo-layout{
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <div class="hero settings-hero">
+    <div class="hero-text">
+      <div class="hero-eyebrow">Conta e preferencias</div>
+      <h2>Configuracoes</h2>
+      <p>Gerencie sua foto, confira seus dados e acompanhe os acessos do seu perfil.</p>
+    </div>
+    <div class="hero-tags">
+      <div class="hero-tag">Perfil</div>
+      <div class="hero-tag">Foto</div>
+      <div class="hero-tag">Preferencias</div>
+    </div>
+  </div>
+
+  <div class="grid settings-grid">
+    <section class="tile profile-card">
+      <h3>Perfil</h3>
+      <p>Dados basicos da sua conta no portal.</p>
+      <div class="info-list">
+        <div class="info-row">
+          <div class="info-label">Nome</div>
+          <div class="info-value">{{ display_name|default:request.user.get_username }}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Usuario</div>
+          <div class="info-value">{{ request.user.get_username }}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">SSO</div>
+          <div class="info-value">{{ display_sso|default:"-" }}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Email</div>
+          <div class="info-value">{{ display_email|default:"-" }}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Ultimo login</div>
+          <div class="info-value">{{ request.user.last_login|date:"d/m/Y H:i"|default:"-" }}</div>
+        </div>
+      </div>
+      <div class="group-chips">
+        {% if group_labels %}
+          {% for group in group_labels %}
+            <span class="group-chip">{{ group }}</span>
+          {% endfor %}
+        {% else %}
+          <span class="group-chip">Sem grupo</span>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="tile photo-card">
+      <h3>Foto do usuario</h3>
+      <p>Atualize a foto para substituir as iniciais no topo.</p>
+
+      {% if action_msg %}
+        <div class="notice ok">{{ action_msg }}</div>
+      {% endif %}
+      {% if action_err %}
+        <div class="notice err">{{ action_err }}</div>
+      {% endif %}
+
+      <div class="photo-layout">
+        <form class="photo-form" method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="field">
+            <label for="photo-file">Nova foto</label>
+            <input id="photo-file" type="file" name="photo" accept="image/*" required>
+            <div class="field-hint">Formatos: JPG, PNG. Tamanho recomendado 300x300.</div>
+          </div>
+          <div class="photo-actions">
+            <button class="btn" type="submit">Salvar foto</button>
+            <button class="btn btn-secondary" type="reset">Limpar</button>
+          </div>
+        </form>
+        <div class="photo-preview">
+          <div class="preview-avatar">
+            {% if profile and profile.photo %}
+              <img src="{{ profile.photo.url }}" alt="Foto do usuario">
+            {% else %}
+              {{ request.user.get_username|slice:":2"|upper }}
+            {% endif %}
+          </div>
+          <div class="preview-title">Avatar atual</div>
+          <div class="preview-desc">A foto aparece no topo do portal.</div>
+        </div>
+      </div>
+    </section>
+
+</div>
+{% endblock %}

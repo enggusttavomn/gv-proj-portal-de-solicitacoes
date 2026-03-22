@@ -1,0 +1,948 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/status_finalizadas.html
+  Objetivo: Tela do portal: status finalizadas.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - Solicitacoes finalizadas{% endblock %}
+{% block body_class %}legacy-ui{% endblock %}
+
+{% block sidebar %}
+  {% include "portal/_sidebar_solicitante.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="hero">
+    <h2>Solicitacoes finalizadas</h2>
+    <p>Lista consolidada das solicitacoes finalizadas do solicitante.</p>
+  </div>
+
+  <div class="grid">
+    <div class="tile status-tile" style="grid-column: span 12;">
+      <div class="status-table-wrap">
+        <table class="status-table">
+          <thead class="status-table__head">
+            <tr>
+              <th>Nº GV PROJ</th>
+              <th>Sufixo</th>
+              <th>Descricao</th>
+              <th>Qtde</th>
+              <th>Baseline Projeto</th>
+              <th>Baseline Producao</th>
+              <th>Status</th>
+              <th>Ver solicitacao</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if solicitacoes %}
+              {% for sol in solicitacoes %}
+                <tr data-gv="{{ sol.display_id|default:sol.id }}" data-solicitacao-id="{{ sol.id }}">
+                  <td class="gv-proj-id">{{ sol.display_id }}</td>
+                  <td>
+                    {{ sol.sufixo|default:"-" }}
+                  </td>
+                  <td>
+                    {{ sol.descricao_ferramenta|default:sol.descricao|default:sol.titulo|default:"Solicitacao" }}
+                  </td>
+                  <td>
+                    {{ sol.quantidade|default:"-" }}
+                  </td>
+                  <td>
+                    {% if sol.baseline_ame %}
+                      {{ sol.baseline_ame|date:"d/m/Y" }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if sol.baseline_producao %}
+                      {{ sol.baseline_producao|date:"d/m/Y" }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="status-pill {{ sol.status_class }}">{{ sol.status_label }}</span>
+                  </td>
+                  <td>
+                    <a
+                      class="action-link action-link--icon"
+                      href="{% url 'visualizar_solicitacao' %}?id={{ sol.id }}&back=status_finalizadas"
+                      data-modal="ver-solicitacao"
+                      data-solicitacao-id="{{ sol.id }}"
+                      data-show-projetista="false"
+                      data-gv="{{ sol.display_id|default:"-" }}"
+                      data-area="{{ sol.area|default:"-" }}"
+                      data-solicitante="{{ sol.criado_por.get_full_name|default:sol.criado_por.username|default:"-" }}"
+                      data-job="{{ sol.job|default:"-" }}"
+                      data-solicitacao="{% if sol.solicitado_em %}{{ sol.solicitado_em|date:"d/m/Y" }}{% else %}-{% endif %}"
+                      data-jobs="{{ sol.jobs_envolvidas|default:"-" }}"
+                      data-sufixo="{{ sol.sufixo|default:"-" }}"
+                      data-descricao="{{ sol.descricao_ferramenta|default:sol.descricao|default:sol.titulo|default:"-" }}"
+                      data-desenho="{% if sol.desenho_referencia %}{{ sol.desenho_referencia }}{% else %}Nao informado.{% endif %}"
+                      data-moc="{{ sol.numero_moc|default:"-" }}"
+                      data-quantidade="{{ sol.quantidade|default:"-" }}"
+                      data-baseline-projeto="{% if sol.baseline_ame %}{{ sol.baseline_ame|date:"d/m/Y" }}{% else %}-{% endif %}"
+                      data-baseline-producao="{% if sol.baseline_producao %}{{ sol.baseline_producao|date:"d/m/Y" }}{% else %}-{% endif %}"
+                      data-observacoes="{{ sol.observacoes_projeto|default:"-" }}"
+                      data-horas="{{ sol.material|default:"-" }}"
+                      data-projeto-entregue="{% if sol.prazo_estimado %}{{ sol.prazo_estimado|date:"d/m/Y" }}{% else %}-{% endif %}"
+                      data-status="{{ sol.tratamento|default:sol.status_label|default:"-" }}"
+                      data-projetista-executor="{% if sol.atribuido_para %}{{ sol.atribuido_para.get_full_name|default:sol.atribuido_para.username }}{% else %}-{% endif %}"
+                      data-projetista="{% if sol.atribuido_para %}{{ sol.atribuido_para.get_full_name|default:sol.atribuido_para.username }}{% else %}-{% endif %}"
+                      data-disposicao="{{ sol.descricao_tecnica|default:"-" }}"
+                      data-observacoes-projetista="{{ sol.observacoes_aprovacao|default:"-" }}"
+                    >
+                      <span class="action-link__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" role="img" focusable="false" aria-hidden="true">
+                          <path d="M2.3 12.3c2.6-4 6-6.3 9.7-6.3 3.8 0 7.2 2.3 9.7 6.3-2.5 4-5.9 6.2-9.7 6.2-3.7 0-7.1-2.2-9.7-6.2z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                          <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
+                        </svg>
+                      </span>
+                      Ver solicitacao
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="8">
+                  <span class="status-empty">Nenhuma solicitacao encontrada.</span>
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="status-count">
+        Total: {{ solicitacoes|length }}
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="ver-solicitacao-modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="true"></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ver-solicitacao-title">
+      <div class="modal-head">
+        <h3 id="ver-solicitacao-title">
+          Controle de Projeto<span class="modal-title-id" data-title="gv"></span>
+        </h3>
+        <button class="modal-close" type="button" data-close="true" aria-label="Fechar">X</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-section">
+          <div class="form-grid">
+            <div class="form-label">Numero GV Projeto</div>
+            <div class="form-value" data-field="gv"></div>
+
+            <div class="form-label">Area</div>
+            <div class="form-value" data-field="area"></div>
+
+            <div class="form-label">Solicitante</div>
+            <div class="form-value" data-field="solicitante"></div>
+
+            <div class="form-label">JOB</div>
+            <div class="form-value" data-field="job"></div>
+
+            <div class="form-label">Data da solicitacao</div>
+            <div class="form-value" data-field="solicitacao"></div>
+
+            <div class="form-label">JOB's Envolvidas</div>
+            <div class="form-value" data-field="jobs"></div>
+
+            <div class="form-label">Sufixo</div>
+            <div class="form-value" data-field="sufixo"></div>
+
+            <div class="form-label form-start">Descricao do dispositivo</div>
+            <div class="form-value form-wide" data-field="descricao"></div>
+
+            <div class="form-label form-start">Desenho de referencia</div>
+            <div class="form-value form-wide" data-field="desenho"></div>
+
+            <div class="form-label">NA§ do MOC</div>
+            <div class="form-value" data-field="moc"></div>
+
+            <div class="form-label">Qtd.</div>
+            <div class="form-value" data-field="quantidade"></div>
+
+            <div class="form-label">Baseline Projeto</div>
+            <div class="form-value" data-field="baseline-projeto"></div>
+
+            <div class="form-label">Baseline Producao</div>
+            <div class="form-value" data-field="baseline-producao"></div>
+
+            <div class="form-label form-start">Observacoes de solicitacao</div>
+            <div class="form-value form-wide" data-field="observacoes"></div>
+          </div>
+        </div>
+
+        <div class="form-divider" data-divider="projetista"></div>
+
+        <div class="form-section" data-section="projetista">
+          <h4 class="modal-subtitle">Disposicao do Projetista</h4>
+          <div class="form-grid">
+            <div class="form-label">Horas do Projeto</div>
+            <div class="form-value" data-field="horas"></div>
+
+            <div class="form-label">Projeto Entregue</div>
+            <div class="form-value" data-field="projeto-entregue"></div>
+
+            <div class="form-label">Status</div>
+            <div class="form-value" data-field="status"></div>
+
+            <div class="form-label">Projetista Executor</div>
+            <div class="form-value" data-field="projetista-executor"></div>
+
+            <div class="form-label">Projetista</div>
+            <div class="form-value" data-field="projetista"></div>
+
+            <div class="form-label form-start">Disposicao e Acao</div>
+            <div class="form-value form-wide" data-field="disposicao"></div>
+
+            <div class="form-label form-start">Observacoes do projetista</div>
+            <div class="form-value form-wide" data-field="observacoes-projetista"></div>
+          </div>
+        </div>
+
+        <div class="form-divider" data-divider="final"></div>
+
+        <div class="form-section" data-section="disposicao-final">
+          <h4 class="modal-subtitle">Disposicao Final</h4>
+          <form method="post" data-form="disposicao-final">
+            {% csrf_token %}
+            <input type="hidden" name="solicitacao_id" value="" data-final="solicitacao-id" />
+            <input type="hidden" name="acao" value="" data-final="acao" />
+
+            <div class="form-grid form-grid--final">
+              <div class="form-label form-start">Disposicao e Acao</div>
+              <div class="form-field form-wide">
+                <input class="inp" name="disposicao" value="" readonly data-final="disposicao" />
+              </div>
+
+              <div class="form-label form-start" data-final="label-retrabalho">Observacao de Retrabalho</div>
+              <div class="form-field form-wide" data-final="field-retrabalho">
+                <textarea class="inp" name="observacao_retrabalho" rows="3" data-final="observacao-retrabalho"></textarea>
+              </div>
+
+              <div class="form-label form-start" data-final="label-final">Observacao Final</div>
+              <div class="form-field form-wide" data-final="field-final">
+                <textarea class="inp" name="observacao_final" rows="3" data-final="observacao-final"></textarea>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn-primary" type="submit">Enviar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .status-pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:12px;
+    }
+    .status-pill.pending{ background: rgba(11,95,83,.12); color: rgba(11,95,83,.95); }
+    .status-pill.warning{ background: rgba(15,23,42,.08); color: rgba(15,23,42,.85); }
+    .status-pill.rework{ background: rgba(183,211,75,.18); color: rgba(90,110,25,.95); }
+    .status-pill.ok{ background: rgba(11,95,83,.14); color: rgba(11,95,83,.95); }
+    .status-pill.danger{ background: rgba(244,63,94,.12); color: rgba(159,18,57,.95); }
+    .status-pill.muted{ background: rgba(15,23,42,.08); color: rgba(15,23,42,.65); }
+    .status-tile{
+      padding: 18px 18px 20px;
+      border: 1px solid rgba(15,23,42,.06);
+      box-shadow: 0 14px 30px rgba(15,23,42,.08);
+    }
+    .status-filters{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(15,23,42,.08);
+    }
+    .status-filters__intro h3{
+      margin: 0 0 6px;
+      font-size: 15px;
+    }
+    .status-filters__intro p{
+      margin:0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .status-filters__controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .status-input,
+    .status-select{
+      min-width: 240px;
+      padding:10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.85);
+      outline: none;
+      font-size: 13px;
+    }
+    .status-select{
+      min-width: 190px;
+    }
+    .status-input:focus,
+    .status-select:focus{
+      border-color: rgba(11,95,83,.45);
+      box-shadow: 0 0 0 3px rgba(11,95,83,.15);
+    }
+    .status-apply{
+      padding:10px 16px;
+      border-radius: 12px;
+      border:1px solid rgba(17,24,39,.12);
+      background: var(--green);
+      color:white;
+      font-weight:800;
+      cursor:pointer;
+      letter-spacing:.01em;
+      box-shadow: 0 10px 18px rgba(11,95,83,.22);
+    }
+    .status-table-wrap{
+      margin-top: 14px;
+      overflow: auto;
+      border: 1px solid rgba(17,24,39,.10);
+      border-radius: 16px;
+      background: rgba(255,255,255,.82);
+    }
+    .status-table{
+      width:100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 920px;
+    }
+    .status-table__head{
+      text-align:left;
+      font-size:13px;
+      color: #f8fafc;
+      background: linear-gradient(90deg, rgba(11,95,83,.95), rgba(9,86,74,.98));
+    }
+    .status-table th,
+    .status-table td{
+      padding: 12px 12px;
+    }
+    .status-table tbody tr{
+      border-top: 1px solid rgba(17,24,39,.08);
+    }
+    .status-table tbody tr:nth-child(even){
+      background: rgba(15,23,42,.02);
+    }
+    .status-table tbody tr.search-hit td{
+      background: rgba(183,211,75,.22);
+      transition: background .3s ease;
+      animation: searchHitFlash 2.8s ease-in-out 1;
+    }
+    .status-table tbody tr.search-hit td:first-child{
+      box-shadow: inset 4px 0 0 rgba(11,95,83,.6);
+    }
+    @keyframes searchHitFlash{
+      0%{ background: rgba(183,211,75,.45); }
+      60%{ background: rgba(183,211,75,.25); }
+      100%{ background: rgba(183,211,75,.22); }
+    }
+    .gv-proj-id{
+      font-weight: 800;
+      color: rgba(15,23,42,.92);
+      white-space: nowrap;
+    }
+    .status-empty{
+      color: var(--muted);
+    }
+    .status-count{
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .hero-back{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      margin-top: 12px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.28);
+      background: rgba(255,255,255,.12);
+      color: #f8fafc;
+      font-weight: 800;
+      font-size: 12px;
+      text-decoration: none;
+      position: relative;
+      z-index: 1;
+    }
+    .action-links{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .action-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(17,24,39,.12);
+      font-weight:800;
+      font-size:12px;
+      text-decoration:none;
+      letter-spacing:.01em;
+      background: rgba(255,255,255,.7);
+      color: var(--text);
+      box-shadow: 0 6px 14px rgba(15,23,42,.08);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .action-chip:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(15,23,42,.12);
+      border-color: rgba(11,95,83,.35);
+    }
+    .action-chip:focus-visible{
+      outline:2px solid rgba(11,95,83,.45);
+      outline-offset:2px;
+    }
+    .action-approve{
+      border-color: rgba(11,95,83,.35);
+      background: rgba(11,95,83,.08);
+      color: var(--green);
+    }
+    .action-rework{
+      border-color: rgba(234,179,8,.35);
+      background: rgba(234,179,8,.12);
+      color: #a16207;
+    }
+    .action-link{
+      text-decoration:none;
+      font-weight:800;
+      color:var(--green);
+      font-size:13px;
+    }
+    .action-link--icon{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.7);
+      box-shadow: 0 6px 14px rgba(15,23,42,.08);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .action-link--icon:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(15,23,42,.12);
+      border-color: rgba(11,95,83,.35);
+    }
+    .action-link__icon{
+      width:16px;
+      height:16px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color: var(--green);
+    }
+    .action-link__icon svg{
+      width:16px;
+      height:16px;
+      display:block;
+    }
+    .status-actions-col{
+      text-align:center;
+      width:72px;
+      white-space:nowrap;
+    }
+    .status-action-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      min-width:34px;
+      height:32px;
+      padding:0 10px;
+      border-radius:999px;
+      border:1px solid rgba(17,24,39,.12);
+      font-weight:800;
+      font-size:12px;
+      background: rgba(255,255,255,.9);
+      color: var(--text);
+      cursor:pointer;
+      text-decoration:none;
+      box-shadow: 0 6px 14px rgba(15,23,42,.08);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .status-action-btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(15,23,42,.12);
+      border-color: rgba(11,95,83,.35);
+    }
+    .status-action-btn:focus-visible{
+      outline:2px solid rgba(11,95,83,.45);
+      outline-offset:2px;
+    }
+    .status-action-btn.approve{
+      border-color: rgba(11,95,83,.35);
+      background: rgba(11,95,83,.08);
+      color: var(--green);
+      font-size:14px;
+      min-width:32px;
+      padding:0 8px;
+    }
+    .status-action-btn.rework{
+      border-color: rgba(234,179,8,.35);
+      background: rgba(234,179,8,.12);
+      color: #a16207;
+      padding:0 8px;
+      height:32px;
+      min-width:32px;
+    }
+    .status-action-btn.cancel{
+      border-color: rgba(244,63,94,.35);
+      background: rgba(244,63,94,.12);
+      color: #be123c;
+      font-size:14px;
+      min-width:32px;
+      padding:0 8px;
+    }
+    .status-action-icon{
+      width:18px;
+      height:18px;
+      display:inline-flex;
+    }
+    .status-action-icon svg{
+      width:18px;
+      height:18px;
+      display:block;
+    }
+    .modal{
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 1000;
+      overflow: hidden;
+      padding: 12px;
+      overscroll-behavior: contain;
+    }
+    .modal.is-open{
+      display: block;
+    }
+    .modal-backdrop{
+      position:absolute;
+      inset:0;
+      background: rgba(15,23,42,.45);
+      backdrop-filter: blur(2px);
+    }
+    .modal-card{
+      position: relative;
+      margin: 0 auto;
+      max-width: 1100px;
+      width: min(94vw, 1100px);
+      max-height: calc(100vh - 24px);
+      height: min(92vh, calc(100vh - 24px));
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 30px 80px rgba(15,23,42,.35);
+      overflow: hidden;
+      z-index: 1;
+      display:flex;
+      flex-direction:column;
+      min-height: 0;
+    }
+    .modal-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 20px;
+      background: linear-gradient(90deg, rgba(11,95,83,.95), rgba(9,86,74,.98));
+      color:#fff;
+    }
+    .modal-head h3{
+      margin:0;
+      font-size:17px;
+      font-weight:800;
+    }
+    .modal-close{
+      border:none;
+      background: rgba(255,255,255,.18);
+      color:#fff;
+      font-size:16px;
+      width:34px;
+      height:34px;
+      border-radius:999px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .modal-body{
+      flex:1;
+      padding:18px;
+      overflow:auto;
+      min-height: 0;
+      scrollbar-gutter: stable;
+    }
+    .modal-subtitle{
+      margin:0 0 12px;
+      font-size:14px;
+      color: rgba(15,23,42,.85);
+    }
+    .form-section h4{
+      margin:0 0 12px;
+    }
+    .form-grid{
+      display:grid;
+      grid-template-columns: 180px 1fr 180px 1fr;
+      gap:10px 12px;
+    }
+    .form-grid--final{
+      grid-template-columns: 180px 1fr;
+    }
+    .form-label{
+      background: rgba(11,95,83,.92);
+      color:#fff;
+      font-weight:800;
+      border-radius:10px;
+      padding:9px 12px;
+      font-size:13px;
+      display:flex;
+      align-items:center;
+    }
+    .form-value{
+      width:100%;
+      border-radius:10px;
+      border:1px solid rgba(17,24,39,.12);
+      padding:10px 12px;
+      background: rgba(255,255,255,.60);
+      min-height: 40px;
+      display:flex;
+      align-items:center;
+      white-space: pre-wrap;
+    }
+    .form-wide{
+      grid-column: 2 / -1;
+      align-items:flex-start;
+    }
+    .form-start{
+      grid-column: 1 / 2;
+    }
+    .form-field{
+      width:100%;
+      border-radius:10px;
+      padding:0;
+      background: transparent;
+      min-height: auto;
+      display:flex;
+      align-items:center;
+    }
+    .inp{
+      width:100%;
+      border-radius:10px;
+      border:1px solid rgba(17,24,39,.14);
+      padding:10px 12px;
+      background: rgba(255,255,255,.65);
+      outline:none;
+      font-size:13px;
+    }
+    .inp:focus{
+      border-color: rgba(11,95,83,.35);
+      box-shadow: 0 0 0 3px rgba(11,95,83,.10);
+    }
+    .form-actions{
+      margin-top:14px;
+      display:flex;
+      justify-content:flex-end;
+    }
+    .btn-primary{
+      border:none;
+      background: var(--green);
+      color:#fff;
+      padding:10px 16px;
+      border-radius:999px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .form-divider{
+      height:1px;
+      margin:18px 0;
+      background: rgba(17,24,39,.08);
+    }
+    @media (max-width: 1100px){
+      .form-grid{
+        grid-template-columns: 1fr;
+      }
+      .form-wide{
+        grid-column: auto;
+      }
+      .form-start{
+        grid-column: auto;
+      }
+    }
+    @media (max-height: 820px){
+      .modal-head{
+        padding: 12px 16px;
+      }
+      .modal-body{
+        padding: 14px;
+      }
+      .form-grid{
+        gap:8px 10px;
+      }
+      .form-label,
+      .form-value{
+        padding:8px 10px;
+        font-size:12px;
+      }
+      .inp{
+        padding:8px 10px;
+        font-size:12px;
+      }
+    }
+  </style>
+  <script>
+    (function () {
+      var modal = document.getElementById("ver-solicitacao-modal");
+      if (!modal) return;
+
+      var closeButton = modal.querySelector(".modal-close");
+      var titleId = modal.querySelector("[data-title='gv']");
+      var finalSection = modal.querySelector("[data-section='disposicao-final']");
+      var finalDivider = modal.querySelector("[data-divider='final']");
+      var finalForm = modal.querySelector("[data-form='disposicao-final']");
+      var finalActionInput = modal.querySelector("[data-final='acao']");
+      var finalSolicitacaoInput = modal.querySelector("[data-final='solicitacao-id']");
+      var finalDisposicaoInput = modal.querySelector("[data-final='disposicao']");
+      var obsRetrabalhoField = modal.querySelector("[data-final='observacao-retrabalho']");
+      var obsFinalField = modal.querySelector("[data-final='observacao-final']");
+      var obsRetrabalhoWrap = modal.querySelector("[data-final='field-retrabalho']");
+      var obsFinalWrap = modal.querySelector("[data-final='field-final']");
+      var obsRetrabalhoLabel = modal.querySelector("[data-final='label-retrabalho']");
+      var obsFinalLabel = modal.querySelector("[data-final='label-final']");
+      var previousFocus = null;
+      var fieldMap = {
+        gv: "data-gv",
+        area: "data-area",
+        solicitante: "data-solicitante",
+        job: "data-job",
+        solicitacao: "data-solicitacao",
+        jobs: "data-jobs",
+        sufixo: "data-sufixo",
+        descricao: "data-descricao",
+        desenho: "data-desenho",
+        moc: "data-moc",
+        quantidade: "data-quantidade",
+        "baseline-projeto": "data-baseline-projeto",
+        "baseline-producao": "data-baseline-producao",
+        observacoes: "data-observacoes",
+        horas: "data-horas",
+        "projeto-entregue": "data-projeto-entregue",
+        status: "data-status",
+        "projetista-executor": "data-projetista-executor",
+        projetista: "data-projetista",
+        disposicao: "data-disposicao",
+        "observacoes-projetista": "data-observacoes-projetista"
+      };
+      var actionLabels = {
+        aprovar: "Aprovado",
+        retrabalho: "Retrabalho",
+        cancelar: "Cancelar"
+      };
+
+      function getQueryParam(href, key) {
+        if (!href) return "";
+        var queryIndex = href.indexOf("?");
+        if (queryIndex === -1) return "";
+        var query = href.slice(queryIndex + 1);
+        var pairs = query.split("&");
+        for (var i = 0; i < pairs.length; i++) {
+          var parts = pairs[i].split("=");
+          if (decodeURIComponent(parts[0]) === key) {
+            return decodeURIComponent(parts[1] || "");
+          }
+        }
+        return "";
+      }
+
+      function getActionKey(link) {
+        if (!link) return "";
+        return link.getAttribute("data-acao") || getQueryParam(link.getAttribute("href"), "acao");
+      }
+
+      function getSolicitacaoId(link) {
+        if (!link) return "";
+        return link.getAttribute("data-solicitacao-id") || getQueryParam(link.getAttribute("href"), "id");
+      }
+
+      function toggleFinalSection(show) {
+        if (finalSection) finalSection.style.display = show ? "" : "none";
+        if (finalDivider) finalDivider.style.display = show ? "" : "none";
+      }
+
+      function setObservationVisibility(isRetrabalho) {
+        var showRetrabalho = !!isRetrabalho;
+        if (obsRetrabalhoWrap) obsRetrabalhoWrap.style.display = showRetrabalho ? "" : "none";
+        if (obsRetrabalhoLabel) obsRetrabalhoLabel.style.display = showRetrabalho ? "" : "none";
+        if (obsFinalWrap) obsFinalWrap.style.display = showRetrabalho ? "none" : "";
+        if (obsFinalLabel) obsFinalLabel.style.display = showRetrabalho ? "none" : "";
+        if (obsRetrabalhoField) obsRetrabalhoField.disabled = !showRetrabalho;
+        if (obsFinalField) obsFinalField.disabled = showRetrabalho;
+      }
+
+      function normalizeValue(value) {
+        if (value === null || value === undefined) return "-";
+        if (typeof value === "string") {
+          var trimmed = value.trim();
+          return trimmed ? trimmed : "-";
+        }
+        return value;
+      }
+
+      function setFieldValue(field, value) {
+        var el = modal.querySelector("[data-field='" + field + "']");
+        if (!el) return;
+        el.textContent = normalizeValue(value);
+      }
+
+      function setTitle(value) {
+        if (!titleId) return;
+        var normalized = normalizeValue(value);
+        titleId.textContent = normalized === "-" ? "" : " - " + normalized;
+      }
+
+      function populateFields(link, dataSource) {
+        var source = dataSource || link;
+        if (!source) return;
+        Object.keys(fieldMap).forEach(function (field) {
+          var attr = fieldMap[field];
+          var value = source.getAttribute(attr);
+          setFieldValue(field, value);
+        });
+        setTitle(source.getAttribute(fieldMap.gv));
+      }
+
+      function applyFinalActionState(link) {
+        var actionKey = getActionKey(link);
+        var isAction = !!actionKey;
+        toggleFinalSection(isAction);
+        if (!isAction) {
+          if (finalForm) finalForm.setAttribute("action", "");
+          if (finalActionInput) finalActionInput.value = "";
+          if (finalSolicitacaoInput) finalSolicitacaoInput.value = "";
+          if (finalDisposicaoInput) finalDisposicaoInput.value = "";
+          if (obsRetrabalhoField) obsRetrabalhoField.value = "";
+          if (obsFinalField) obsFinalField.value = "";
+          return;
+        }
+
+        var actionLabel = actionLabels[actionKey] || actionKey;
+        if (finalDisposicaoInput) finalDisposicaoInput.value = actionLabel;
+        if (finalActionInput) finalActionInput.value = actionKey;
+        if (finalSolicitacaoInput) finalSolicitacaoInput.value = getSolicitacaoId(link);
+        if (finalForm) finalForm.setAttribute("action", link.getAttribute("href") || "");
+        if (obsRetrabalhoField) obsRetrabalhoField.value = "";
+        if (obsFinalField) obsFinalField.value = "";
+        setObservationVisibility(actionKey === "retrabalho");
+      }
+
+      function openModal(link) {
+        var dataSource = link;
+        if (link && !link.getAttribute(fieldMap.gv)) {
+          var row = link.closest ? link.closest("tr") : null;
+          var fallback = row ? row.querySelector("a[data-modal='ver-solicitacao'][data-gv]") : null;
+          if (fallback) dataSource = fallback;
+        }
+        populateFields(link, dataSource);
+        applyFinalActionState(link);
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+        previousFocus = document.activeElement;
+        document.body.style.overflow = "hidden";
+        if (closeButton) closeButton.focus();
+      }
+
+      function closeModal() {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+        if (previousFocus && previousFocus.focus) previousFocus.focus();
+        previousFocus = null;
+      }
+
+      function highlightRow(targetId) {
+        if (!targetId) return;
+        var row = document.querySelector("tr[data-gv='" + targetId + "']");
+        if (!row) {
+          row = document.querySelector("tr[data-solicitacao-id='" + targetId + "']");
+        }
+        if (!row) return;
+        row.classList.add("search-hit");
+        if (row.scrollIntoView) {
+          row.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        window.setTimeout(function () {
+          row.classList.remove("search-hit");
+        }, 3500);
+      }
+
+      document.addEventListener("click", function (evt) {
+        var target = evt.target;
+        if (!target) return;
+
+        var closeTarget = target.closest ? target.closest("[data-close='true']") : null;
+        if (closeTarget) {
+          closeModal();
+          return;
+        }
+
+        var link = target.closest ? target.closest("[data-modal='ver-solicitacao']") : null;
+        if (link) {
+          evt.preventDefault();
+          openModal(link);
+        }
+      });
+
+        document.addEventListener("keydown", function (evt) {
+          if (evt.key === "Escape" && modal.classList.contains("is-open")) {
+            closeModal();
+          }
+        });
+
+        var autoOpen = getQueryParam(window.location.href, "open");
+        if (autoOpen === "1") {
+          var targetId = getQueryParam(window.location.href, "id");
+          var selector = "[data-modal='ver-solicitacao']";
+          if (targetId) {
+            selector += "[data-gv='" + targetId + "']";
+          }
+          var autoLink = document.querySelector(selector);
+          if (!autoLink && targetId) {
+            autoLink = document.querySelector(
+              "[data-modal='ver-solicitacao'][data-solicitacao-id='" + targetId + "']"
+            );
+          }
+          if (autoLink) {
+            openModal(autoLink);
+          }
+          if (targetId) {
+            highlightRow(targetId);
+          }
+        }
+      })();
+    </script>
+{% endblock %}
+
+
+

@@ -1,0 +1,36 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+.venv2/
+.venv_local/
+
+# Tooling
+.vscode/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Logs and temp files
+*.log
+importtime.log
+importtime_venv.log
+_tmp/
+_tmp_test_dir/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Local environment files
+.env
+.env.*
+
+# Local database (contains local/dev data, never commit)
+db.sqlite3
+
+# User-uploaded media (never commit real uploads)
+media/

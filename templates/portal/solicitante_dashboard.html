@@ -1,0 +1,24 @@
+﻿{% extends "base_app.html" %}
+{#
+  Template: templates/portal/solicitante_dashboard.html
+  Objetivo: Tela do portal: solicitante dashboard.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - Solicitante{% endblock %}
+
+{% block sidebar %}
+  {% include "portal/_sidebar_solicitante.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="hero">
+    <h2>Bem-vindo ao seu painel do solicitante, {{ request.user.get_full_name|default:request.user.get_username }}</h2>
+    <p>Indicadores rapidos para acompanhar seus projetos e pendencias.</p>
+  </div>
+
+  {% include "portal/_solicitante_dashboard_body.html" %}
+{% endblock %}
+
+

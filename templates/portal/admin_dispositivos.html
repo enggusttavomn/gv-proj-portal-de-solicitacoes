@@ -1,0 +1,785 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/admin_dispositivos.html
+  Objetivo: Tela do portal: admin dispositivos.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+
+{% block title %}Admin - Dispositivos | GV_PROJ{% endblock %}
+
+{% block sidebar %}
+  {% include "portal/_sidebar_admin.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="hero">
+    <h2>Admin - Dispositivos ({{ selected_label|default:"Todos os dispositivos" }})</h2>
+    <p>
+      Visao e governanca completa do fluxo de dispositivos.
+      <br>
+      Use o filtro para focar em um dispositivo e acompanhar status e solicitacoes.
+    </p>
+  </div>
+
+  <div class="filters">
+    <form method="get" class="filter-form">
+      <label for="dispositivo">Filtrar dispositivo</label>
+      <select id="dispositivo" name="dispositivo" onchange="this.form.submit()">
+        <option value="">Todos os dispositivos</option>
+        {% for opt in dispositivo_options %}
+          <option value="{{ opt.id }}" {% if selected_dispositivo_id == opt.id|stringformat:"s" %}selected{% endif %}>{{ opt.label }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button class="btn-soft" type="submit">Aplicar</button></noscript>
+    </form>
+
+    <div class="filter-summary">
+      <div class="filter-chip">Visao atual</div>
+      <div class="filter-value">{{ selected_label|default:"Todos os dispositivos" }}</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="tile">
+      <h3>Total ativos</h3>
+      <p>Solicitacoes de dispositivos ativas.</p>
+      <div class="tile-value">{{ total_count|default:0 }}</div>
+    </div>
+    <div class="tile">
+      <h3>Em validacao</h3>
+      <p>Dispositivos em projeto/validacao.</p>
+      <div class="tile-value">{{ validacao_count|default:0 }}</div>
+    </div>
+    <div class="tile">
+      <h3>Aguardando liberacao</h3>
+      <p>Dispositivos aguardando aprovacao.</p>
+      <div class="tile-value info">{{ liberacao_count|default:0 }}</div>
+    </div>
+    <div class="tile">
+      <h3>Liberados</h3>
+      <p>Dispositivos aprovados/concluidos.</p>
+      <div class="tile-value ok">{{ liberados_count|default:0 }}</div>
+    </div>
+    <div class="tile">
+      <h3>Atraso / retrabalho</h3>
+      <p>Reprovados ou solicitados para retrabalho.</p>
+      <div class="tile-value danger">{{ atraso_count|default:0 }}</div>
+    </div>
+
+    <div class="kpi-card dispositivos" style="grid-column: span 12;">
+      <div class="kpi-top">
+        <div class="kpi-title">
+          <span>Status dos dispositivos</span>
+          <h4>Pipeline e SLA</h4>
+        </div>
+        <div class="kpi-ring" style="--p: {{ sla_pct|default:0 }};">
+          <span>{{ sla_pct|default:0 }}%</span>
+        </div>
+      </div>
+
+      <div class="kpi-main">
+        <div>
+          <div class="kpi-value">{{ total_count|default:0 }}</div>
+          <div class="kpi-caption">Solicitacoes ativas</div>
+        </div>
+        <div class="kpi-tag">{{ selected_label|default:"Todos os dispositivos" }}</div>
+      </div>
+
+      <div class="kpi-metrics">
+        <div class="kpi-metric">
+          <div class="kpi-label">Validacao</div>
+          <div class="kpi-number">{{ validacao_count|default:0 }}</div>
+          <div class="kpi-bar"><span style="--w: {{ validacao_pct|default:0 }};"></span></div>
+        </div>
+        <div class="kpi-metric">
+          <div class="kpi-label">Liberacao</div>
+          <div class="kpi-number">{{ liberacao_count|default:0 }}</div>
+          <div class="kpi-bar"><span style="--w: {{ liberacao_pct|default:0 }};"></span></div>
+        </div>
+        <div class="kpi-metric">
+          <div class="kpi-label">Liberados</div>
+          <div class="kpi-number">{{ liberados_count|default:0 }}</div>
+          <div class="kpi-bar"><span style="--w: {{ liberados_pct|default:0 }};"></span></div>
+        </div>
+        <div class="kpi-metric">
+          <div class="kpi-label">Atraso</div>
+          <div class="kpi-number">{{ atraso_count|default:0 }}</div>
+          <div class="kpi-bar"><span style="--w: {{ atraso_pct|default:0 }};"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile chart-card chart-card--wide">
+      <div class="chart-head">
+        <div>
+          <h3>Tendencia semanal</h3>
+          <p>Comparativo das ultimas 6 semanas por status.</p>
+        </div>
+        <div class="chart-pill">Semanas</div>
+      </div>
+      <div class="chart-canvas">
+        <canvas id="dispositivosTrendChart" role="img" aria-label="Tendencia semanal de dispositivos"></canvas>
+        <div class="chart-empty">Sem dados para este periodo.</div>
+      </div>
+    </div>
+
+    <div class="tile chart-card chart-card--narrow">
+      <div class="chart-head">
+        <div>
+          <h3>Distribuicao por status</h3>
+          <p>Mapa rapido das filas ativas.</p>
+        </div>
+      </div>
+      <div class="donut-wrap">
+        <canvas id="dispositivosStatusChart" role="img" aria-label="Distribuicao por status"></canvas>
+        <div class="donut-center">
+          <span>Total ativo</span>
+          <strong>{{ total_count|default:0 }}</strong>
+        </div>
+        <div class="donut-empty">Sem dados</div>
+      </div>
+      <div class="donut-legend">
+        <div class="legend-item" style="--c:#0b5f53;">
+          <span></span>Validacao <strong>{{ validacao_count|default:0 }}</strong>
+        </div>
+        <div class="legend-item" style="--c:#2563eb;">
+          <span></span>Liberacao <strong>{{ liberacao_count|default:0 }}</strong>
+        </div>
+        <div class="legend-item" style="--c:#16a34a;">
+          <span></span>Liberados <strong>{{ liberados_count|default:0 }}</strong>
+        </div>
+        <div class="legend-item" style="--c:#dc2626;">
+          <span></span>Atraso <strong>{{ atraso_count|default:0 }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile" style="grid-column: span 12;">
+      <h3 style="margin:0 0 6px;">Acoes rapidas (Admin)</h3>
+      <p style="margin:0 0 12px; color:var(--muted); font-size:13px;">
+        Atalhos para abrir o tipo certo. Depois vira listar/filtrar/editar com CRUD real.
+      </p>
+
+      <div class="action-grid">
+        <a class="btn-soft" href="{% url 'disp_novo_completo' %}">01) Novo disp. Completo</a>
+        <a class="btn-soft" href="{% url 'disp_novo_parte_retrabalhada' %}">02) Novo disp. + parte retrabalhada</a>
+        <a class="btn-soft" href="{% url 'disp_novo_parte_existente' %}">03) Novo disp. + parte existente</a>
+
+        <a class="btn-soft" href="{% url 'disp_usar_projeto_existente' %}">04) Usar Projeto existente</a>
+        <a class="btn-soft" href="{% url 'disp_regularizar_art' %}">05) Regularizar (ART)</a>
+        <a class="btn-soft" href="{% url 'disp_retrabalhar_disp_existente' %}">06) Retrabalhar disp. existente</a>
+
+        <a class="btn-soft" href="{% url 'disp_usar_disp_existente_regularizado' %}">07) Usar disp. regularizado</a>
+        <a class="btn-soft" href="{% url 'disp_cancelar_frnr' %}">08) Cancelar FRNR</a>
+        <a class="btn-soft" href="{% url 'disp_job_irma' %}">09) Job Irma</a>
+
+        <a class="btn-soft" href="{% url 'disp_fabricacao_interna' %}">10) Fabricacao Interna</a>
+        <a class="btn-soft" href="{% url 'disp_retrabalhar_projeto' %}">11) Retrabalhar Projeto</a>
+        <div class="btn-soft is-disabled">12) (reservado)</div>
+      </div>
+    </div>
+
+    <div class="tile" style="grid-column: span 12;">
+      <h3 style="margin:0 0 6px;">Lista de dispositivos</h3>
+      <p style="margin:0 0 12px; color:var(--muted); font-size:13px;">
+        Visao geral por numero de dispositivo. Use "Ver painel" para focar na lista.
+      </p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Dispositivo</th>
+              <th>Area</th>
+              <th>Validacao</th>
+              <th>Liberacao</th>
+              <th>Liberados</th>
+              <th>Atraso</th>
+              <th>Acoes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in dispositivos_rows %}
+              <tr class="{% if row.is_selected %}is-selected{% endif %}">
+                <td>{{ row.label }}</td>
+                <td>{{ row.area }}</td>
+                <td>{{ row.validacao }}</td>
+                <td>{{ row.liberacao }}</td>
+                <td>{{ row.liberados }}</td>
+                <td>{{ row.atraso }}</td>
+                <td><a class="link" href="?dispositivo={{ row.id }}">Ver painel</a></td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7">Nenhum dispositivo encontrado.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% if selected_dispositivo %}
+      <div class="tile" style="grid-column: span 12;">
+        <h3 style="margin:0 0 6px;">Solicitacoes recentes</h3>
+        <p style="margin:0 0 12px; color:var(--muted); font-size:13px;">
+          Ultimas solicitacoes registradas para {{ selected_label }}.
+        </p>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Titulo</th>
+                <th>Status</th>
+                <th>Criado em</th>
+                <th>Projetista</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in selected_solicitacoes %}
+                <tr>
+                  <td>{{ item.display_id }}</td>
+                  <td>{{ item.titulo }}</td>
+                  <td><span class="status-pill {{ item.status_class }}">{{ item.status_label }}</span></td>
+                  <td>{{ item.criado_em|date:"d/m/Y" }}</td>
+                  <td>
+                    {% if item.atribuido_para %}
+                      {{ item.atribuido_para.get_full_name|default:item.atribuido_para.get_username }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="5">Nenhuma solicitacao encontrada.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  {{ dispositivos_trend_payload|json_script:"dispositivos-trend-data" }}
+  {{ dispositivos_trend_lines|json_script:"dispositivos-trend-lines" }}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    (function () {
+      const trendPayloadEl = document.getElementById("dispositivos-trend-data");
+      const trendLinesEl = document.getElementById("dispositivos-trend-lines");
+      const trendCanvas = document.getElementById("dispositivosTrendChart");
+      const trendEmpty = trendCanvas ? trendCanvas.parentElement.querySelector(".chart-empty") : null;
+
+      if (trendPayloadEl && trendLinesEl && trendCanvas && window.Chart) {
+        const payload = JSON.parse(trendPayloadEl.textContent || "null") || {};
+        const lines = JSON.parse(trendLinesEl.textContent || "null") || [];
+        const labels = payload.labels || [];
+        const series = payload.series || {};
+        const datasets = lines.map((line) => ({
+          label: line.label,
+          data: series[line.key] || [],
+          borderColor: line.color,
+          backgroundColor: line.color,
+          tension: 0.35,
+          borderWidth: 2,
+          pointRadius: 2,
+          pointHoverRadius: 4,
+          fill: false,
+        }));
+        const hasData = labels.length && datasets.some((set) => (set.data || []).some((val) => val > 0));
+        if (hasData) {
+          if (trendEmpty) trendEmpty.style.display = "none";
+          new Chart(trendCanvas.getContext("2d"), {
+            type: "line",
+            data: { labels, datasets },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { precision: 0 },
+                  grid: { color: "rgba(15,23,42,.08)" },
+                },
+                x: { grid: { display: false } },
+              },
+              plugins: {
+                legend: {
+                  position: "bottom",
+                  labels: { usePointStyle: true, boxWidth: 8, boxHeight: 8 },
+                },
+                tooltip: { mode: "index", intersect: false },
+              },
+            },
+          });
+        } else if (trendEmpty) {
+          trendEmpty.style.display = "grid";
+        }
+      } else if (trendEmpty) {
+        trendEmpty.style.display = "grid";
+      }
+
+      const donutCanvas = document.getElementById("dispositivosStatusChart");
+      const donutWrap = donutCanvas ? donutCanvas.parentElement : null;
+      if (donutCanvas && window.Chart) {
+        const statusData = [
+          { label: "Validacao", value: Number("{{ validacao_count|default:0 }}"), color: "#0b5f53" },
+          { label: "Liberacao", value: Number("{{ liberacao_count|default:0 }}"), color: "#2563eb" },
+          { label: "Liberados", value: Number("{{ liberados_count|default:0 }}"), color: "#16a34a" },
+          { label: "Atraso", value: Number("{{ atraso_count|default:0 }}"), color: "#dc2626" },
+        ];
+        const total = statusData.reduce((sum, item) => sum + (item.value || 0), 0);
+        if (!total) {
+          if (donutWrap) donutWrap.classList.add("is-empty");
+          return;
+        }
+        new Chart(donutCanvas.getContext("2d"), {
+          type: "doughnut",
+          data: {
+            labels: statusData.map((item) => item.label),
+            datasets: [
+              {
+                data: statusData.map((item) => item.value),
+                backgroundColor: statusData.map((item) => item.color),
+                borderWidth: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "68%",
+            plugins: { legend: { display: false } },
+          },
+        });
+      } else if (donutWrap) {
+        donutWrap.classList.add("is-empty");
+      }
+    })();
+  </script>
+
+  <style>
+    .filters{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(17,24,39,.10);
+      background: rgba(255,255,255,.70);
+      box-shadow: 0 10px 24px rgba(0,0,0,.08);
+    }
+    .filter-form{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .filter-form label{
+      font-size:12px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color: var(--muted);
+    }
+    .filter-form select{
+      min-width: 220px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.85);
+      font-weight:700;
+    }
+    .btn-soft{
+      border:1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.85);
+      padding:8px 12px;
+      border-radius:12px;
+      font-weight:800;
+      cursor:pointer;
+      text-decoration:none;
+      color: var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
+    .btn-soft:hover{ filter: brightness(0.98); }
+    .btn-soft.is-disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      pointer-events:none;
+    }
+    .filter-summary{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .filter-chip{
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      background: rgba(11,95,83,.10);
+      color: var(--green);
+      border: 1px solid rgba(11,95,83,.20);
+      white-space: nowrap;
+    }
+    .filter-value{
+      font-weight:900;
+      color: var(--text);
+    }
+    .tile-value{
+      margin-top:10px;
+      font-weight:900;
+      font-size:26px;
+      color: var(--green);
+    }
+    .tile-value.info{ color: #2563eb; }
+    .tile-value.ok{ color: #16a34a; }
+    .tile-value.danger{ color: #dc2626; }
+    .chart-card{
+      background: rgba(255,255,255,.85);
+    }
+    .chart-card--wide{ grid-column: span 7; }
+    .chart-card--narrow{ grid-column: span 5; }
+    .chart-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .chart-head h3{ margin:0; }
+    .chart-head p{
+      margin:6px 0 0;
+      color: var(--muted);
+      font-size:12px;
+      max-width: 320px;
+    }
+    .chart-pill{
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color: var(--green);
+      background: rgba(11,95,83,.12);
+      border: 1px solid rgba(11,95,83,.18);
+      white-space: nowrap;
+    }
+    .chart-canvas{
+      position: relative;
+      min-height: 240px;
+    }
+    .chart-canvas canvas{
+      width: 100%;
+      height: 240px;
+    }
+    .chart-empty{
+      position:absolute;
+      inset: 0;
+      display:none;
+      place-items:center;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(255,255,255,.6);
+      border-radius: 16px;
+      border: 1px dashed rgba(15,23,42,.12);
+    }
+    .donut-wrap{
+      position: relative;
+      min-height: 220px;
+      display:grid;
+      place-items:center;
+    }
+    .donut-wrap canvas{
+      width: 220px;
+      height: 220px;
+    }
+    .donut-center{
+      position:absolute;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:4px;
+      font-weight:800;
+      color: var(--text);
+      pointer-events:none;
+    }
+    .donut-center span{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      color: var(--muted);
+    }
+    .donut-center strong{
+      font-size:24px;
+    }
+    .donut-empty{
+      position:absolute;
+      inset: 0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(255,255,255,.7);
+      border-radius: 16px;
+      border: 1px dashed rgba(15,23,42,.12);
+    }
+    .donut-wrap.is-empty .donut-empty{
+      display:flex;
+    }
+    .donut-wrap.is-empty canvas,
+    .donut-wrap.is-empty .donut-center{
+      opacity:.2;
+    }
+    .donut-legend{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 12px;
+      margin-top: 12px;
+    }
+    .legend-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      font-size:12px;
+      color: var(--text);
+      font-weight:700;
+      padding:6px 8px;
+      border-radius:10px;
+      background: rgba(255,255,255,.7);
+      border: 1px solid rgba(15,23,42,.08);
+    }
+    .legend-item span{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--c);
+      box-shadow: 0 0 0 3px rgba(15,23,42,.05);
+    }
+    .kpi-card{
+      position: relative;
+      overflow: hidden;
+      padding: 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(17,24,39,.10);
+      background: rgba(255,255,255,.76);
+      box-shadow: 0 16px 30px rgba(0,0,0,.08);
+    }
+    .kpi-card::after{
+      content:"";
+      position:absolute;
+      inset:-45% -50%;
+      background: radial-gradient(320px 180px at var(--glow-x, 70%) 20%, var(--accent-soft), transparent 65%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .kpi-card.dispositivos{
+      --accent: #0b5f53;
+      --accent-soft: rgba(183,211,75,.28);
+      --glow-x: 20%;
+    }
+    .kpi-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .kpi-title span{
+      font-size:11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .kpi-title h4{
+      margin:4px 0 0;
+      font-size: 18px;
+    }
+    .kpi-ring{
+      width: 58px;
+      height: 58px;
+      border-radius: 999px;
+      display:grid;
+      place-items:center;
+      background: conic-gradient(var(--accent) calc(var(--p) * 1%), rgba(15,23,42,.10) 0);
+      border: 1px solid rgba(17,24,39,.12);
+      position: relative;
+    }
+    .kpi-ring::after{
+      content:"";
+      position:absolute;
+      inset:7px;
+      background: #fff;
+      border-radius: 999px;
+      box-shadow: inset 0 0 0 1px rgba(17,24,39,.06);
+    }
+    .kpi-ring span{
+      position: relative;
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--accent);
+    }
+    .kpi-main{
+      margin-top: 12px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .kpi-value{
+      font-size: 28px;
+      font-weight: 900;
+    }
+    .kpi-caption{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .kpi-tag{
+      padding:4px 8px;
+      border-radius:999px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent);
+      background: rgba(255,255,255,.7);
+      border: 1px solid rgba(17,24,39,.10);
+      white-space: nowrap;
+    }
+    .kpi-metrics{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .kpi-metric{
+      padding: 10px 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.78);
+      border: 1px solid rgba(17,24,39,.08);
+    }
+    .kpi-label{
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .kpi-number{
+      margin-top: 6px;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .kpi-bar{
+      height: 6px;
+      background: rgba(15,23,42,.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .kpi-bar span{
+      display:block;
+      height:100%;
+      width: calc(var(--w) * 1%);
+      background: linear-gradient(90deg, var(--accent), rgba(15,23,42,.12));
+      border-radius: 999px;
+    }
+    .action-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap:10px;
+    }
+    .table-wrap{
+      overflow:auto;
+      border:1px solid rgba(17,24,39,.10);
+      border-radius:14px;
+      background: rgba(255,255,255,.60);
+    }
+    .data-table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:820px;
+    }
+    .data-table th{
+      padding:12px;
+      border-bottom:1px solid rgba(17,24,39,.10);
+      text-align:left;
+      font-size:13px;
+      opacity:.85;
+    }
+    .data-table td{
+      padding:12px;
+      border-bottom:1px solid rgba(17,24,39,.08);
+      font-size:14px;
+    }
+    .data-table tr.is-selected{
+      background: rgba(11,95,83,.10);
+    }
+    .link{
+      text-decoration:none;
+      font-weight:800;
+      color: var(--green);
+    }
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      background: rgba(15,23,42,.08);
+      color: var(--text);
+    }
+    .status-pill.pending{
+      background: rgba(14,116,144,.12);
+      color: #0e7490;
+    }
+    .status-pill.warning{
+      background: rgba(234,179,8,.15);
+      color: #a16207;
+    }
+    .status-pill.rework{
+      background: rgba(183,211,75,.22);
+      color: #3f6212;
+    }
+    .status-pill.ok{
+      background: rgba(11,95,83,.15);
+      color: var(--green);
+    }
+    .status-pill.danger{
+      background: rgba(220,38,38,.12);
+      color: #b91c1c;
+    }
+    .status-pill.muted{
+      background: rgba(15,23,42,.10);
+      color: var(--muted);
+    }
+    @media (max-width: 1100px){
+      .filters{ flex-direction:column; align-items:flex-start; }
+      .chart-card--wide,
+      .chart-card--narrow{
+        grid-column: span 12;
+      }
+    }
+  </style>
+{% endblock %}

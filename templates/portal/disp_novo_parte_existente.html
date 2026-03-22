@@ -1,0 +1,18 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/disp_novo_parte_existente.html
+  Objetivo: Tela do portal: disp novo parte existente.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - Novo + parte existente{% endblock %}
+{% block sidebar %}{% include "portal/_sidebar_dispositivos.html" %}{% endblock %}
+{% block content %}
+  <div class="hero">
+    <h2>Novo disp. + parte existente</h2>
+    <p>Novo dispositivo reaproveitando parte existente sem retrabalho (ou mínimo).</p>
+  </div>
+  {% if ok %}<div class="tile" style="border:1px solid rgba(11,95,83,.25); background:rgba(11,95,83,.06);"><b>Enviado (placeholder).</b></div>{% endif %}
+  {% include "portal/_disp_form_base.html" with tipo="Novo + parte existente" %}
+{% endblock %}

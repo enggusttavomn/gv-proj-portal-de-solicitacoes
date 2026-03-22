@@ -1,0 +1,42 @@
+<div class="navsec">PAINEL</div>
+<nav class="nav">
+  <a class="{% if request.resolver_match.url_name == 'dashboard_dispositivos' %}active{% endif %}"
+     href="{% url 'dashboard_dispositivos' %}">
+    <div class="ico"><svg aria-hidden="true"><use href="#ico-dashboard"></use></svg></div>Dashboard
+  </a>
+
+  <div class="navsec" style="margin-top:12px;">DISPOSITIVOS</div>
+
+  <a class="{% if request.resolver_match.url_name == 'disp_novo_completo' %}active{% endif %}"
+     href="{% url 'disp_novo_completo' %}"><div class="ico text">01</div>Novo disp. Completo</a>
+
+  <a class="{% if request.resolver_match.url_name == 'disp_novo_parte_retrabalhada' %}active{% endif %}"
+     href="{% url 'disp_novo_parte_retrabalhada' %}"><div class="ico text">02</div>Novo disp. + parte retrabalhada</a>
+
+  <a class="{% if request.resolver_match.url_name == 'disp_novo_parte_existente' %}active{% endif %}"
+     href="{% url 'disp_novo_parte_existente' %}"><div class="ico text">03</div>Novo disp. + parte existente</a>
+
+  <a class="{% if request.resolver_match.url_name == 'disp_usar_projeto_existente' %}active{% endif %}"
+     href="{% url 'disp_usar_projeto_existente' %}"><div class="ico text">04</div>Usar Projeto existente (Físico não existente)</a>
+
+  <a class="{% if request.resolver_match.url_name == 'disp_regularizar_art' %}active{% endif %}"
+     href="{% url 'disp_regularizar_art' %}"><div class="ico text">05</div>Regularizar disp. fisicamente existente (ART)</a>
+
+  <a class="{% if request.resolver_match.url_name == 'disp_retrabalhar_disp_existente' %}active{% endif %}"
+     href="{% url 'disp_retrabalhar_disp_existente' %}"><div class="ico text">06</div>Retrabalhar disp. fisicamente existente</a>
+
+  <a class="{% if request.resolver_match.url_name == 'disp_usar_disp_existente_regularizado' %}active{% endif %}"
+     href="{% url 'disp_usar_disp_existente_regularizado' %}"><div class="ico text">07</div>Usar disp. fisicamente existente regularizado</a>
+
+  <a class="{% if request.resolver_match.url_name == 'disp_cancelar_frnr' %}active{% endif %}"
+     href="{% url 'disp_cancelar_frnr' %}"><div class="ico text">08</div>Cancelar FRNR</a>
+
+  <a class="{% if request.resolver_match.url_name == 'disp_job_irma' %}active{% endif %}"
+     href="{% url 'disp_job_irma' %}"><div class="ico text">09</div>Job Irmã</a>
+
+  <a class="{% if request.resolver_match.url_name == 'disp_fabricacao_interna' %}active{% endif %}"
+     href="{% url 'disp_fabricacao_interna' %}"><div class="ico text">10</div>Fabricação Interna</a>
+
+  <a class="{% if request.resolver_match.url_name == 'disp_retrabalhar_projeto' %}active{% endif %}"
+     href="{% url 'disp_retrabalhar_projeto' %}"><div class="ico text">11</div>Retrabalhar Projeto</a>
+</nav>

@@ -1,0 +1,367 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/aprovar_reaprovar.html
+  Objetivo: Tela do portal: aprovar reaprovar.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - Solicitar retrabalho{% endblock %}
+{% block body_class %}legacy-ui{% endblock %}
+
+{% block sidebar %}
+  {% include "portal/_sidebar_solicitante.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="hero">
+    <div class="hero-head">
+      <div class="hero-main">
+        <h2>Aprovar / Reprovar</h2>
+        <p>Mostra apenas solicitacoes aguardando aprovacao para decisao final.</p>
+      </div>
+      <div class="hero-kpi">
+        <div class="hero-kpi-label">Pendentes</div>
+        <div class="hero-kpi-value">{{ pendentes_count|default:0 }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="tile status-tile" style="grid-column: span 12;">
+      {% if action_msg %}
+        <div class="form-alert ok">{{ action_msg }}</div>
+      {% endif %}
+      {% if action_err %}
+        <div class="form-alert err">{{ action_err }}</div>
+      {% endif %}
+
+      <form method="get" class="status-filters">
+        <div class="status-filters__intro">
+          <h3>Filtros</h3>
+          <p>Mostrando apenas solicitacoes com pendencia de aprovacao.</p>
+        </div>
+
+        <div class="status-filters__controls">
+          <input
+            type="text"
+            name="q"
+            value="{{ filters.q }}"
+            placeholder="Buscar por GV PROJ, descricao, sufixo..."
+            class="status-input"
+          />
+          <button type="submit" class="status-apply">Aplicar</button>
+        </div>
+      </form>
+
+      <form method="post" class="status-action-form">
+        {% csrf_token %}
+        <div class="status-table-wrap">
+          <table class="status-table">
+            <thead class="status-table__head">
+              <tr>
+                <th style="width:52px;">Sel.</th>
+                <th>Nº GV PROJ</th>
+                <th>Descricao</th>
+                <th>Sufixo</th>
+                <th>Status</th>
+                <th>Acoes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if solicitacoes %}
+                {% for sol in solicitacoes %}
+                  <tr>
+                    <td>
+                      <input
+                        class="status-radio"
+                        type="radio"
+                        name="solicitacao_id"
+                        value="{{ sol.id }}"
+                        {% if selected_id == sol.id|stringformat:"s" %}checked{% endif %}
+                      />
+                    </td>
+                    <td class="gv-proj-id">{{ sol.display_id }}</td>
+                    <td>{{ sol.descricao_ferramenta|default:sol.descricao|default:sol.titulo|default:"Solicitacao" }}</td>
+                    <td>{{ sol.sufixo|default:"-" }}</td>
+                    <td>
+                      <span class="status-pill {{ sol.status_class }}">{{ sol.status_label }}</span>
+                    </td>
+                    <td>
+                      <a
+                        class="action-link"
+                        href="{% url 'visualizar_solicitacao' %}?id={{ sol.id }}&back=aprovar_reaprovar{% if filters.q %}&q={{ filters.q|urlencode }}{% endif %}"
+                      >
+                        Ver solicitacao
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="6">
+                    <span class="status-empty">Nenhuma solicitacao aguardando aprovacao.</span>
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="action-panel">
+          <div>
+            <div class="action-label">Comentario / observacoes</div>
+            <textarea
+              class="status-textarea"
+              name="comentario"
+              rows="3"
+              placeholder="Detalhe o motivo, se necessario."
+            >{{ comentario }}</textarea>
+          </div>
+          <div class="action-row">
+            <button class="action-btn ghost" type="submit" name="acao" value="reprovar">Reprovar</button>
+            <button class="action-btn primary" type="submit" name="acao" value="aprovar">Aprovar</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="status-count">Total: {{ solicitacoes|length }}</div>
+    </div>
+  </div>
+
+  <style>
+    .hero-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .hero-main{ min-width:0; }
+    .hero-kpi{
+      border:1px solid rgba(255,255,255,.24);
+      background: rgba(255,255,255,.12);
+      border-radius:16px;
+      padding:10px 14px;
+      min-width:120px;
+      text-align:right;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+    }
+    .hero-kpi-label{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-weight:800;
+      opacity:.8;
+    }
+    .hero-kpi-value{
+      font-size:26px;
+      font-weight:900;
+      line-height:1;
+      margin-top:6px;
+      color:#fff;
+    }
+    @media (max-width: 720px){
+      .hero-head{ flex-direction:column; align-items:flex-start; }
+      .hero-kpi{ text-align:left; width:100%; }
+    }
+    .form-alert{
+      margin-bottom:12px;
+      padding:10px 12px;
+      border-radius:10px;
+      font-weight:700;
+      border:1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.75);
+    }
+    .form-alert.ok{ border-color: rgba(11,95,83,.35); background: rgba(11,95,83,.08); }
+    .form-alert.err{ border-color: rgba(244,63,94,.45); background: rgba(244,63,94,.08); }
+    .status-pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:12px;
+    }
+    .status-pill.pending{ background: rgba(11,95,83,.12); color: rgba(11,95,83,.95); }
+    .status-pill.warning{ background: rgba(15,23,42,.08); color: rgba(15,23,42,.85); }
+    .status-pill.rework{ background: rgba(183,211,75,.18); color: rgba(90,110,25,.95); }
+    .status-pill.ok{ background: rgba(11,95,83,.14); color: rgba(11,95,83,.95); }
+    .status-pill.danger{ background: rgba(244,63,94,.12); color: rgba(159,18,57,.95); }
+    .status-pill.muted{ background: rgba(15,23,42,.08); color: rgba(15,23,42,.65); }
+    .status-tile{
+      padding: 18px 18px 20px;
+      border: 1px solid rgba(15,23,42,.06);
+      box-shadow: 0 14px 30px rgba(15,23,42,.08);
+    }
+    .status-filters{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(15,23,42,.08);
+    }
+    .status-filters__intro h3{
+      margin: 0 0 6px;
+      font-size: 15px;
+    }
+    .status-filters__intro p{
+      margin:0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .status-filters__controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .status-input{
+      min-width: 240px;
+      padding:10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.85);
+      outline: none;
+      font-size: 13px;
+    }
+    .status-input:focus{
+      border-color: rgba(11,95,83,.45);
+      box-shadow: 0 0 0 3px rgba(11,95,83,.15);
+    }
+    .status-apply{
+      padding:10px 16px;
+      border-radius: 12px;
+      border:1px solid rgba(17,24,39,.12);
+      background: var(--green);
+      color:white;
+      font-weight:800;
+      cursor:pointer;
+      letter-spacing:.01em;
+      box-shadow: 0 10px 18px rgba(11,95,83,.22);
+    }
+    .status-table-wrap{
+      margin-top: 14px;
+      overflow: auto;
+      border: 1px solid rgba(17,24,39,.10);
+      border-radius: 16px;
+      background: rgba(255,255,255,.82);
+    }
+    .status-table{
+      width:100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 720px;
+    }
+    .status-table__head{
+      text-align:left;
+      font-size:13px;
+      color: #f8fafc;
+      background: linear-gradient(90deg, rgba(11,95,83,.95), rgba(9,86,74,.98));
+    }
+    .status-table th,
+    .status-table td{
+      padding: 12px 12px;
+    }
+    .status-table tbody tr{
+      border-top: 1px solid rgba(17,24,39,.08);
+    }
+    .status-table tbody tr:nth-child(even){
+      background: rgba(15,23,42,.02);
+    }
+    .gv-proj-id{
+      font-weight: 800;
+      color: rgba(15,23,42,.92);
+      white-space: nowrap;
+    }
+    .status-empty{
+      color: var(--muted);
+    }
+    .status-count{
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .status-radio{
+      width: 16px;
+      height: 16px;
+      accent-color: var(--green);
+      cursor: pointer;
+    }
+    .status-action-form{
+      margin-top: 6px;
+    }
+    .action-panel{
+      display:grid;
+      gap:12px;
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px dashed rgba(17,24,39,.16);
+      background: rgba(255,255,255,.65);
+    }
+    .action-label{
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 800;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .status-textarea{
+      width:100%;
+      border-radius: 12px;
+      border: 1px solid rgba(17,24,39,.12);
+      padding:10px 12px;
+      background: rgba(255,255,255,.9);
+      outline: none;
+      font-size: 13px;
+    }
+    .status-textarea:focus{
+      border-color: rgba(11,95,83,.45);
+      box-shadow: 0 0 0 3px rgba(11,95,83,.12);
+    }
+    .action-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .action-btn{
+      border-radius: 12px;
+      border:1px solid rgba(17,24,39,.12);
+      padding:10px 16px;
+      font-weight:800;
+      cursor:pointer;
+      letter-spacing:.01em;
+    }
+    .action-btn.primary{
+      background: var(--green);
+      color: #fff;
+      box-shadow: 0 10px 18px rgba(11,95,83,.22);
+    }
+    .action-btn.ghost{
+      background: rgba(255,255,255,.88);
+      color: var(--text);
+    }
+    .action-link{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(17,24,39,.12);
+      font-weight:800;
+      font-size:12px;
+      text-decoration:none;
+      color: var(--green);
+      background: rgba(255,255,255,.9);
+      white-space: nowrap;
+    }
+  </style>
+{% endblock %}
+
+
+
+
+

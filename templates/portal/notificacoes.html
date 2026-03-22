@@ -1,0 +1,705 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/notificacoes.html
+  Objetivo: Tela do portal: notificacoes.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}Notificacoes | GV_PROJ{% endblock %}
+
+{% block sidebar %}
+  {% if sidebar_template %}
+    {% include sidebar_template %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  <style>
+    .inbox-hero{
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .inbox-hero .hero-text,
+    .inbox-hero .hero-tags{
+      position: relative;
+      z-index: 1;
+    }
+
+    .inbox-hero::after{
+      content: "";
+      position: absolute;
+      right: -140px;
+      top: -120px;
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(circle, rgba(255,255,255,.18), transparent 65%);
+      opacity: .9;
+      pointer-events: none;
+    }
+
+    .hero-eyebrow{
+      font-size: 11px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: rgba(234,242,239,.75);
+    }
+
+    .hero-tags{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .hero-tag{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.26);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .inbox-grid{
+      margin-top: 16px;
+    }
+
+    .inbox-card{
+      grid-column: span 5;
+      display: grid;
+      gap: 12px;
+    }
+
+    .detail-card{
+      grid-column: span 7;
+    }
+
+    .folder-row{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
+      gap: 10px;
+    }
+
+    .folder-row.category-row{
+      grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
+      margin-bottom: 4px;
+    }
+
+    .folder-chip{
+      border: 1px solid rgba(11,95,83,.2);
+      background: rgba(11,95,83,.08);
+      color: var(--green);
+      padding: 8px 10px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      text-decoration: none;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+
+    .folder-chip:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(11,95,83,.12);
+      border-color: rgba(11,95,83,.35);
+    }
+
+    .folder-chip.is-active{
+      box-shadow: 0 14px 24px rgba(15,23,42,.12);
+    }
+
+    .folder-chip.category-chip{
+      border-color: rgba(15,23,42,.16);
+      background: rgba(15,23,42,.06);
+      color: #0f172a;
+    }
+
+    .folder-chip.category-chip.is-active{
+      border-color: rgba(11,95,83,.45);
+      background: rgba(11,95,83,.12);
+      color: var(--green);
+    }
+
+    .folder-chip.category-chip.filter-todos{
+      border-color: rgba(100,116,139,.35);
+      background: rgba(100,116,139,.12);
+      color: rgba(100,116,139,.95);
+    }
+
+    .folder-chip.category-chip.filter-solicitante{
+      border-color: rgba(59,130,246,.3);
+      background: rgba(59,130,246,.12);
+      color: #1d4ed8;
+    }
+
+    .folder-chip.category-chip.filter-projetista{
+      border-color: rgba(11,95,83,.35);
+      background: rgba(11,95,83,.12);
+      color: var(--green);
+    }
+
+    .folder-chip.category-chip.filter-dispositivos{
+      border-color: rgba(245,158,11,.35);
+      background: rgba(245,158,11,.14);
+      color: #b45309;
+    }
+
+    .folder-chip.category-chip.filter-admin{
+      border-color: rgba(15,23,42,.25);
+      background: rgba(15,23,42,.08);
+      color: #0f172a;
+    }
+
+    .folder-label{
+      font-size: 12px;
+      font-weight: 800;
+      color: inherit;
+      letter-spacing: .02em;
+    }
+
+    .folder-count{
+      font-size: 13px;
+      font-weight: 900;
+      color: inherit;
+    }
+
+    .folder-help{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .folder-chip.filter-pendente{
+      border-color: rgba(100,116,139,.4);
+      background: rgba(100,116,139,.12);
+      color: rgba(100,116,139,.95);
+    }
+
+    .folder-chip.filter-pendente.is-active{
+      border-color: rgba(100,116,139,.7);
+      background: rgba(100,116,139,.2);
+    }
+
+    .folder-chip.filter-aprovacao{
+      border-color: rgba(59,130,246,.4);
+      background: rgba(59,130,246,.12);
+      color: rgba(59,130,246,.95);
+    }
+
+    .folder-chip.filter-aprovacao.is-active{
+      border-color: rgba(59,130,246,.7);
+      background: rgba(59,130,246,.22);
+    }
+
+    .folder-chip.filter-retrabalho{
+      border-color: rgba(245,158,11,.45);
+      background: rgba(245,158,11,.14);
+      color: rgba(245,158,11,.95);
+    }
+
+    .folder-chip.filter-retrabalho.is-active{
+      border-color: rgba(245,158,11,.75);
+      background: rgba(245,158,11,.24);
+    }
+
+    .folder-chip.filter-aprovado{
+      border-color: rgba(11,95,83,.45);
+      background: rgba(11,95,83,.12);
+      color: rgba(11,95,83,.95);
+    }
+
+    .folder-chip.filter-aprovado.is-active{
+      border-color: rgba(11,95,83,.75);
+      background: rgba(11,95,83,.22);
+    }
+
+    .folder-chip.filter-cancelado{
+      border-color: rgba(220,38,38,.45);
+      background: rgba(220,38,38,.12);
+      color: rgba(220,38,38,.95);
+    }
+
+    .folder-chip.filter-cancelado.is-active{
+      border-color: rgba(220,38,38,.75);
+      background: rgba(220,38,38,.22);
+    }
+
+    .inbox-list{
+      display: grid;
+      gap: 10px;
+      max-height: 540px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .inbox-item{
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid rgba(17,24,39,.12);
+      border-radius: 16px;
+      padding: 12px;
+      background: rgba(255,255,255,.88);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+      position: relative;
+    }
+
+    .inbox-item:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 14px 26px rgba(15,23,42,.12);
+      border-color: rgba(11,95,83,.25);
+    }
+
+    .inbox-item.active{
+      border-color: rgba(11,95,83,.5);
+      box-shadow: 0 18px 30px rgba(11,95,83,.14);
+      background: rgba(255,255,255,.98);
+    }
+
+    .inbox-item.unread::before{
+      content: "";
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--lime);
+      box-shadow: 0 0 0 4px rgba(183,211,75,.2);
+    }
+
+    .item-row{
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding-left: 16px;
+    }
+
+    .item-title{
+      font-weight: 900;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .item-time{
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .item-meta{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+      padding-left: 16px;
+    }
+
+    .item-preview{
+      font-size: 12px;
+      color: #1f2937;
+      margin-top: 6px;
+      padding-left: 16px;
+    }
+
+    .item-tag{
+      display: inline-flex;
+      margin-top: 8px;
+      margin-left: 16px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      border: 1px solid rgba(17,24,39,.1);
+      background: rgba(15,23,42,.06);
+      color: var(--text);
+    }
+
+    .tag-acao,
+    .tag-novo{
+      background: rgba(11,95,83,.1);
+      color: var(--green);
+      border-color: rgba(11,95,83,.2);
+    }
+
+    .tag-revisar,
+    .tag-ajuste{
+      background: rgba(245,158,11,.12);
+      color: #b45309;
+      border-color: rgba(245,158,11,.3);
+    }
+
+    .tag-final,
+    .tag-check{
+      background: rgba(59,130,246,.12);
+      color: #1d4ed8;
+      border-color: rgba(59,130,246,.3);
+    }
+
+    .tag-admin{
+      background: rgba(15,23,42,.08);
+      color: #0f172a;
+      border-color: rgba(15,23,42,.2);
+    }
+
+    .inbox-empty{
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px dashed rgba(17,24,39,.2);
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .detail-head{
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .detail-status{
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .detail-title{
+      margin: 0 0 6px;
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--text);
+    }
+
+    .detail-meta{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .detail-body{
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.85);
+      border: 1px solid rgba(17,24,39,.08);
+      font-size: 13px;
+      color: #1f2937;
+      line-height: 1.5;
+    }
+
+    .detail-shortcut{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(11,95,83,.28);
+      background: rgba(11,95,83,.08);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 800;
+      text-decoration: none;
+      letter-spacing: .02em;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+
+    .detail-shortcut:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(11,95,83,.18);
+      border-color: rgba(11,95,83,.45);
+    }
+
+    .email-body{
+      display: grid;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .email-sep{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: #0f172a;
+      opacity: .75;
+      letter-spacing: .4px;
+      user-select: none;
+    }
+
+    .email-title{
+      font-weight: 900;
+      color: #0f172a;
+    }
+
+    .email-requester{
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .email-rows{
+      display: grid;
+      gap: 8px;
+    }
+
+    .email-row{
+      display: grid;
+      gap: 2px;
+      padding: 2px 0;
+    }
+
+    .email-label{
+      font-weight: 800;
+      color: #1d4ed8;
+    }
+
+    .email-value{
+      color: #0f172a;
+      word-break: break-word;
+    }
+
+    .email-comments{
+      display: grid;
+      gap: 6px;
+    }
+
+    .email-link{
+      font-size: 12px;
+      color: #0f172a;
+      margin-top: 4px;
+    }
+
+    .email-link a{
+      color: #2563eb;
+      word-break: break-all;
+    }
+
+    .email-footer{
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+    }
+
+    .detail-empty{
+      padding: 18px;
+      border-radius: 16px;
+      border: 1px dashed rgba(17,24,39,.2);
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 1100px){
+      .inbox-card,
+      .detail-card{
+        grid-column: span 12;
+      }
+    }
+  </style>
+
+  <div class="hero inbox-hero">
+    <div class="hero-text">
+      <div class="hero-eyebrow">Central de mensagens</div>
+      <h2>Notificacoes</h2>
+      <p>Caixa de entrada para acompanhar alertas do seu fluxo.</p>
+    </div>
+    <div class="hero-tags">
+      {% if category_filters %}
+        <div class="hero-tag">Categoria: {{ active_category.label }}</div>
+      {% endif %}
+      <div class="hero-tag">Filtro: {{ active_filter.label }}</div>
+      <div class="hero-tag">Resultados: {{ notifications|length }}</div>
+      <div class="hero-tag">Nao lidas: <span data-notification-count>{{ notifications_count }}</span></div>
+    </div>
+  </div>
+
+  <div class="grid inbox-grid">
+    <section class="tile inbox-card">
+      {% if category_filters %}
+        <div class="folder-row category-row">
+          {% for filtro in category_filters %}
+            <a class="folder-chip category-chip filter-{{ filtro.key }} {% if filtro.active %}is-active{% endif %}"
+               href="?category={{ filtro.key }}&status={{ active_filter.key }}">
+              <span class="folder-label">{{ filtro.label }}</span>
+              <span class="folder-count">{{ filtro.count|default:0 }}</span>
+            </a>
+          {% endfor %}
+        </div>
+        <div class="folder-help">Clique nas categorias para filtrar a lista.</div>
+      {% endif %}
+      <div class="folder-row">
+        {% for filtro in filters %}
+          <a class="folder-chip filter-{{ filtro.key }} {% if filtro.active %}is-active{% endif %}"
+             href="?status={{ filtro.key }}&category={{ active_category.key }}">
+            <span class="folder-label">{{ filtro.label }}</span>
+            <span class="folder-count">{{ filtro.count|default:0 }}</span>
+          </a>
+        {% endfor %}
+      </div>
+      <div class="folder-help">Clique nos status para filtrar a lista.</div>
+
+      <div class="inbox-list">
+        {% for item in notifications %}
+          <a class="inbox-item {% if selected and item.id == selected.id %}active{% endif %}{% if item.unread %} unread{% endif %}"
+             data-notification-key="{{ item.key|default:'' }}"
+             href="{% url 'notificacoes' %}?id={{ item.id }}&status={{ active_filter.key }}&category={{ active_category.key }}">
+            <div class="item-row">
+              <div class="item-title">{{ item.title }}</div>
+              <div class="item-time">{{ item.time }}</div>
+            </div>
+            <div class="item-meta">{{ item.meta }}</div>
+            <div class="item-preview">{{ item.preview }}</div>
+            <span class="item-tag tag-{{ item.tag }}">{{ item.tag_label }}</span>
+          </a>
+        {% empty %}
+          <div class="inbox-empty">
+            Sem notificacoes para este status.
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="tile detail-card">
+      {% if selected %}
+        <div class="detail-head">
+          <div>
+            <div class="detail-title">{{ selected.title }}</div>
+            <div class="detail-meta">
+              {% if selected.category_label %}{{ selected.category_label }} · {% endif %}
+              {{ selected.meta }} · {{ selected.time }}
+            </div>
+          </div>
+          <div class="detail-status">
+            <span class="item-tag tag-{{ selected.tag }}">{{ selected.tag_label }}</span>
+            {% if selected.shortcut_url %}
+              <a class="detail-shortcut" href="{{ selected.shortcut_url }}">
+                {{ selected.shortcut_label|default:"Abrir tela relacionada" }}
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="detail-body {% if selected.email %}email-body{% endif %}">
+          {% if selected.email %}
+            <div class="email-sep">------------------------------------------------------------</div>
+            <div class="email-title">{{ selected.email.header }}</div>
+            <div class="email-requester">{{ selected.email.requester_line }}</div>
+            <div class="email-rows">
+              {% for row in selected.email.rows %}
+                <div class="email-row">
+                  <div class="email-label">{{ row.label }}:</div>
+                  <div class="email-value">{{ row.value }}</div>
+                </div>
+              {% endfor %}
+            </div>
+            {% if selected.email.comentarios and selected.email.comentarios != "-" %}
+              <div class="email-comments">
+                <div class="email-label">Comentarios:</div>
+                <div class="email-value">{{ selected.email.comentarios|linebreaksbr }}</div>
+              </div>
+            {% endif %}
+            <div class="email-link">
+              {{ selected.email.link_label|default:"Acessar o Link Abaixo para Aprovar/Negar:" }}
+              <a href="{{ selected.email.action_url }}">{{ selected.email.action_url }}</a>
+            </div>
+            <div class="email-sep">------------------------------------------------------------</div>
+            <div class="email-footer">{{ selected.email.footer }}</div>
+          {% else %}
+            {{ selected.body }}
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="detail-empty">Selecione uma notificacao na lista.</div>
+      {% endif %}
+    </section>
+  </div>
+
+  <script>
+    (function(){
+      const storageKey = "gv_notif_read_keys";
+      const countKey = "gv_notif_unread_count";
+      const items = Array.from(document.querySelectorAll(".inbox-item[data-notification-key]"));
+      const countEl = document.querySelector("[data-notification-count]");
+
+      const loadReadKeys = () => {
+        try {
+          const raw = localStorage.getItem(storageKey);
+          if (!raw) return new Set();
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            return new Set(parsed.filter(Boolean));
+          }
+        } catch (err) {}
+        return new Set();
+      };
+
+      const saveReadKeys = (set) => {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(Array.from(set)));
+        } catch (err) {}
+      };
+
+      const updateCount = (unreadCount) => {
+        if (countEl) {
+          countEl.textContent = String(unreadCount);
+        }
+        try {
+          localStorage.setItem(countKey, String(unreadCount));
+        } catch (err) {}
+      };
+
+      const readKeys = loadReadKeys();
+      let unreadCount = 0;
+
+      items.forEach((item) => {
+        const key = item.getAttribute("data-notification-key");
+        if (!key) return;
+        if (readKeys.has(key)) {
+          item.classList.remove("unread");
+        } else {
+          item.classList.add("unread");
+          unreadCount += 1;
+        }
+      });
+
+      const activeItem = document.querySelector(".inbox-item.active[data-notification-key]");
+      if (activeItem) {
+        const key = activeItem.getAttribute("data-notification-key");
+        if (key && !readKeys.has(key)) {
+          readKeys.add(key);
+          activeItem.classList.remove("unread");
+          unreadCount = Math.max(0, unreadCount - 1);
+        }
+      }
+
+      updateCount(unreadCount);
+      saveReadKeys(readKeys);
+
+      items.forEach((item) => {
+        item.addEventListener("click", () => {
+          const key = item.getAttribute("data-notification-key");
+          if (!key || readKeys.has(key)) return;
+          readKeys.add(key);
+          item.classList.remove("unread");
+          unreadCount = Math.max(0, unreadCount - 1);
+          updateCount(unreadCount);
+          saveReadKeys(readKeys);
+        });
+      });
+    })();
+  </script>
+{% endblock %}

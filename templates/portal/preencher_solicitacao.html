@@ -1,0 +1,743 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/preencher_solicitacao.html
+  Objetivo: Tela do portal: preencher solicitacao.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - {{ hero_title }}{% endblock %}
+{% block body_class %}legacy-ui{% endblock %}
+
+{% block sidebar %}
+  {% include sidebar_template|default:"portal/_sidebar_projetista.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="hero page-hero">
+    <div class="hero-text">
+      <div class="hero-eyebrow">Central de projetos</div>
+      <h2>{{ hero_title }}</h2>
+      <p>{{ hero_subtitle }}</p>
+    </div>
+    <div class="hero-tags">
+      {% if solicitacao %}
+        <div class="hero-tag">GV PROJ: {{ solicitacao.display_id }}</div>
+        <div class="hero-tag">Status: {{ solicitacao.status_label|default:solicitacao.status|default:"-" }}</div>
+      {% elif pendentes %}
+        <div class="hero-tag">Pendentes: {{ pendentes|length }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if not solicitacao and not modo_retrabalho and not view_mode %}
+    <div class="grid">
+      <div class="tile status-tile" style="grid-column: span 12;">
+        <div class="status-filters">
+          <div class="status-filters__intro">
+            <h3>Solicitacoes para preencher</h3>
+            <p>Escolha a solicitacao que voce vai trabalhar agora.</p>
+          </div>
+        </div>
+
+        <div class="status-table-wrap">
+          <table class="status-table">
+            <thead class="status-table__head">
+              <tr>
+                <th>No GV PROJ</th>
+                <th>Secao</th>
+                <th>JOB</th>
+                <th>Status</th>
+                <th>Prioridade</th>
+                <th>Acao</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if pendentes %}
+                {% for s in pendentes %}
+                  <tr>
+                    <td class="gv-proj-id">{{ s.display_id }}</td>
+                    <td>
+                      {% if s.secao %}{{ s.secao }}{% elif s.area %}{{ s.area }}{% else %}-{% endif %}
+                    </td>
+                    <td>{{ s.job|default:"-" }}</td>
+                    <td>
+                      <span class="status-pill {{ s.status_class }}">{{ s.status_label }}</span>
+                    </td>
+                    <td>
+                      <span class="status-pill priority {% if s.prioridade == 4 %}priority-critical{% elif s.prioridade == 3 %}priority-high{% elif s.prioridade == 2 %}priority-mid{% else %}priority-low{% endif %}">
+                        {{ s.get_prioridade_display }}
+                      </span>
+                    </td>
+                    <td>
+                      <a class="action-link action-link--icon" href="{% url 'preencher_solicitacao' %}?id={{ s.id }}">
+                        <span class="action-link__icon" aria-hidden="true">
+                          <svg aria-hidden="true"><use href="#ico-pen"></use></svg>
+                        </span>
+                        Preencher
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="6">
+                    <span class="status-empty">Nenhuma solicitacao pendente.</span>
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="status-count">
+          Total: {{ pendentes|length }}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if solicitacao %}
+    <div class="tile header-card">
+      <div>
+        <h3 style="margin:0 0 6px;">
+          {% if view_mode %}
+            Controle de Projeto #{{ solicitacao.display_id }}
+          {% elif modo_retrabalho %}
+            Retrabalhando solicitacao #{{ solicitacao.display_id }}
+          {% else %}
+            Preenchendo solicitacao #{{ solicitacao.display_id }}
+          {% endif %}
+        </h3>
+        <p style="margin:0; color:var(--muted); font-size:13px;">
+          {% if view_mode %}
+            Visualizacao do retorno do projetista para tomada de decisao.
+          {% elif modo_retrabalho %}
+            Ajuste os dados e envie novamente para aprovacao.
+          {% else %}
+            Complete os dados e envie para aprovacao.
+          {% endif %}
+        </p>
+      </div>
+      {% if back_url or back_url_name %}
+        <a
+          class="btn-soft"
+          href="{% if back_url %}{{ back_url }}{% else %}{% url back_url_name %}{% endif %}"
+          style="text-decoration:none;"
+        >
+          {{ back_label }}
+        </a>
+      {% endif %}
+    </div>
+
+    {% if ok and not view_mode %}
+      <div class="tile" id="save-message" style="grid-column: span 12; border:1px solid rgba(11,95,83,.25); background:rgba(11,95,83,.06);">
+        <b>Enviado.</b> A solicitacao foi atualizada. Voltando para a lista...
+      </div>
+      <script>
+        (function () {
+          var msg = document.getElementById("save-message");
+          if (!msg) return;
+          msg.style.transition = "opacity 0.4s ease";
+          setTimeout(function () {
+            msg.style.opacity = "0";
+          }, 2200);
+          setTimeout(function () {
+            var targetUrl = "{% if back_url %}{{ back_url|escapejs }}{% elif back_url_name %}{% url back_url_name %}{% else %}{% url 'preencher_solicitacao' %}{% endif %}";
+            window.location.href = targetUrl;
+          }, 2600);
+        })();
+      </script>
+    {% endif %}
+
+    <div class="tile form-card">
+      <div class="form-section">
+        <h3>Controle de Projeto</h3>
+        <div class="form-grid">
+          <div class="form-label">Numero GV Projeto</div>
+          <div class="form-value">{{ solicitacao.display_id }}</div>
+
+          <div class="form-label">Area</div>
+          <div class="form-value">{{ solicitacao.area|default:"-" }}</div>
+
+          <div class="form-label">Solicitante</div>
+          <div class="form-value">
+            {{ solicitacao.criado_por.get_full_name|default:solicitacao.criado_por.username }}
+          </div>
+
+          <div class="form-label">JOB</div>
+          <div class="form-value">{{ solicitacao.job|default:"-" }}</div>
+
+          <div class="form-label">Data da solicitacao</div>
+          <div class="form-value">
+            {% if solicitacao.solicitado_em %}{{ solicitacao.solicitado_em|date:"d/m/Y" }}{% else %}-{% endif %}
+          </div>
+
+          <div class="form-label">JOB's Envolvidas</div>
+          <div class="form-value">{{ solicitacao.jobs_envolvidas|default:"-" }}</div>
+
+          <div class="form-label">Sufixo</div>
+          <div class="form-value">{{ solicitacao.sufixo|default:"-" }}</div>
+
+          <div class="form-label form-start">Descricao do dispositivo</div>
+          <div class="form-value form-wide">
+            {{ solicitacao.descricao_ferramenta|default:solicitacao.descricao|default:solicitacao.titulo|default:"-" }}
+          </div>
+
+          <div class="form-label form-start">Desenho de referencia</div>
+          <div class="form-value form-wide">
+            {% if solicitacao.desenho_referencia %}
+              {{ solicitacao.desenho_referencia }}
+            {% else %}
+              <span class="muted">Nao informado.</span>
+            {% endif %}
+          </div>
+
+          <div class="form-label">Nº do MOC</div>
+          <div class="form-value">{{ solicitacao.numero_moc|default:"-" }}</div>
+
+          <div class="form-label">Qtd.</div>
+          <div class="form-value">{{ solicitacao.quantidade|default:"-" }}</div>
+
+          <div class="form-label">Baseline Projeto</div>
+          <div class="form-value">
+            {% if solicitacao.baseline_ame %}{{ solicitacao.baseline_ame|date:"d/m/Y" }}{% else %}-{% endif %}
+          </div>
+
+          <div class="form-label">Baseline Producao</div>
+          <div class="form-value">
+            {% if solicitacao.baseline_producao %}{{ solicitacao.baseline_producao|date:"d/m/Y" }}{% else %}-{% endif %}
+          </div>
+
+          <div class="form-label form-start">Observacoes de solicitacao</div>
+          <div class="form-value form-wide">{{ solicitacao.observacoes_projeto|default:"-" }}</div>
+        </div>
+      </div>
+
+      <div class="form-divider"></div>
+
+      <div class="form-section">
+        <h3>Disposicao do Projetista</h3>
+
+        {% if view_mode %}
+          <div class="form-grid">
+            <div class="form-label">Horas do Projeto</div>
+            <div class="form-value">{{ solicitacao.material|default:"-" }}</div>
+
+            <div class="form-label">Projeto Entregue</div>
+            <div class="form-value">
+              {% if solicitacao.prazo_estimado %}{{ solicitacao.prazo_estimado|date:"d/m/Y" }}{% else %}-{% endif %}
+            </div>
+
+            <div class="form-label">Status</div>
+            <div class="form-value">{{ solicitacao.tratamento|default:solicitacao.status_label|default:"-" }}</div>
+
+            <div class="form-label">Projetista Executor</div>
+            <div class="form-value">
+              {% if solicitacao.atribuido_para %}
+                {{ solicitacao.atribuido_para.get_full_name|default:solicitacao.atribuido_para.username }}
+              {% else %}
+                -
+              {% endif %}
+            </div>
+
+            <div class="form-label">Projetista</div>
+            <div class="form-value">
+              {% if solicitacao.atribuido_para %}
+                {{ solicitacao.atribuido_para.get_full_name|default:solicitacao.atribuido_para.username }}
+              {% else %}
+                -
+              {% endif %}
+            </div>
+
+            <div class="form-label form-start">Disposicao e Acao</div>
+            <div class="form-value form-wide">{{ solicitacao.descricao_tecnica|default:"-" }}</div>
+
+            <div class="form-label form-start">Observacoes do projetista</div>
+            <div class="form-value form-wide">{{ solicitacao.observacoes_aprovacao|default:"-" }}</div>
+          </div>
+        {% else %}
+          <form class="projectista-form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="solicitacao_id" value="{{ solicitacao.id }}">
+            <input type="hidden" name="dim_criticas" value="{{ solicitacao.dim_criticas|default:"" }}">
+
+            <div class="form-grid form-grid--projetista">
+              <div class="form-block">
+                <div class="form-label">Horas do Projeto</div>
+                <div class="form-field">
+                  <input class="inp" name="material" value="{{ solicitacao.material|default:"" }}" />
+                </div>
+              </div>
+
+              <div class="form-block">
+                <div class="form-label">Projeto Entregue</div>
+                <div class="form-field">
+                  <input class="inp" type="date" name="prazo" value="{% if solicitacao.prazo_estimado %}{{ solicitacao.prazo_estimado|date:"Y-m-d" }}{% endif %}" />
+                </div>
+              </div>
+
+              <div class="form-block">
+                <div class="form-label">Status</div>
+                <div class="form-field">
+                  <select class="inp" name="tratamento">
+                    <option value="" {% if not solicitacao.tratamento %}selected{% endif %}>Selecione</option>
+                    <option value="Pendente" {% if solicitacao.tratamento == "Pendente" %}selected{% endif %}>Pendente</option>
+                    <option value="Cancelado" {% if solicitacao.tratamento == "Cancelado" %}selected{% endif %}>Cancelado</option>
+                    <option value="Retrabalho" {% if solicitacao.tratamento == "Retrabalho" %}selected{% endif %}>Retrabalho</option>
+                    <option value="Em aprovacao" {% if solicitacao.tratamento == "Em aprovacao" %}selected{% endif %}>Em aprovacao</option>
+                    <option value="Aprovado" {% if solicitacao.tratamento == "Aprovado" %}selected{% endif %}>Aprovado</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-block">
+                <div class="form-label">Projetista Executor</div>
+                <div class="form-value">
+                  {{ request.user.get_full_name|default:request.user.get_username }}
+                </div>
+              </div>
+
+              <div class="form-block">
+                <div class="form-label">Projetista</div>
+                <div class="form-value">
+                  {{ request.user.get_full_name|default:request.user.get_username }}
+                </div>
+              </div>
+
+              <div class="form-block">
+                <div class="form-label">Disposicao e Acao</div>
+                <div class="form-field">
+                  <input class="inp" name="descricao_tecnica" value="{{ solicitacao.descricao_tecnica|default:"" }}" />
+                </div>
+              </div>
+
+              <div class="form-block form-block--full">
+                <div class="form-label">Observacoes do projetista</div>
+                <div class="form-field">
+                  <textarea class="inp" name="obs" rows="3">{{ solicitacao.observacoes_aprovacao|default:"" }}</textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn-primary" type="submit" name="acao" value="enviar">Enviar</button>
+            </div>
+          </form>
+        {% endif %}
+      </div>
+
+      {% if final_view and not action_mode %}
+        <div class="form-divider"></div>
+
+        <div class="form-section">
+          <h3>Disposicao Final</h3>
+          <div class="form-grid">
+            <div class="form-label">Disposicao e Acao</div>
+            <div class="form-value">{{ final_view.disposicao_label }}</div>
+
+            {% if final_view.is_retrabalho %}
+              <div class="form-label form-start">Observacao de Retrabalho</div>
+              <div class="form-value form-wide">{{ final_view.observacao }}</div>
+            {% else %}
+              <div class="form-label form-start">Observacao Final</div>
+              <div class="form-value form-wide">{{ final_view.observacao }}</div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if action_mode %}
+        <div class="form-divider"></div>
+
+        <div class="form-section">
+          <h3>Disposicao Final</h3>
+
+          {% if action_msg %}
+            <div class="form-alert ok">{{ action_msg }}</div>
+          {% endif %}
+          {% if action_err %}
+            <div class="form-alert err">{{ action_err }}</div>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="solicitacao_id" value="{{ solicitacao.id }}">
+            <input type="hidden" name="acao" value="{{ action_key }}">
+
+            <div class="form-grid">
+              <div class="form-label form-start">Disposicao e Acao</div>
+              <div class="form-field">
+                <input class="inp" name="disposicao" value="{{ action_label }}" readonly />
+              </div>
+
+              {% if action_key == "retrabalho" %}
+                <div class="form-label form-start">Observacao de Retrabalho</div>
+                <div class="form-field form-wide">
+                  <textarea class="inp" name="observacao_retrabalho" rows="3">{{ observacao_retrabalho }}</textarea>
+                </div>
+              {% else %}
+                <div class="form-label form-start">Observacao Final</div>
+                <div class="form-field form-wide">
+                  <textarea class="inp" name="observacao_final" rows="3">{{ observacao_final }}</textarea>
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="form-actions">
+              <button class="btn-primary" type="submit">Enviar</button>
+            </div>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <style>
+    .page-hero{
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .page-hero .hero-text,
+    .page-hero .hero-tags{
+      position: relative;
+      z-index: 1;
+    }
+    .page-hero::after{
+      content: "";
+      position: absolute;
+      right: -140px;
+      top: -120px;
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(circle, rgba(255,255,255,.18), transparent 65%);
+      opacity: .9;
+      pointer-events: none;
+    }
+    .hero-eyebrow{
+      font-size: 11px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: rgba(234,242,239,.75);
+    }
+    .hero-tags{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .hero-tag{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.26);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .2px;
+      color: inherit;
+    }
+    body.legacy-ui .page-hero{
+      background: linear-gradient(135deg, rgba(11,95,83,.96), rgba(9,86,74,.96));
+      border-radius: 20px;
+      padding: 18px 18px;
+      color: #eaf2ef;
+      border: 1px solid rgba(255,255,255,.10);
+      position: relative;
+      overflow: hidden;
+    }
+    body.legacy-ui .page-hero::after{
+      content: "";
+      position: absolute;
+      right: -140px;
+      top: -120px;
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(circle, rgba(255,255,255,.18), transparent 65%);
+      opacity: .9;
+      pointer-events: none;
+    }
+    body.legacy-ui .page-hero h2{
+      margin:0;
+      font-size: 26px;
+      letter-spacing:.2px;
+      color: #fff;
+    }
+    body.legacy-ui .page-hero p{
+      margin:8px 0 0;
+      opacity:.88;
+      color: #eaf2ef;
+      font-size: 14px;
+    }
+    .status-pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:12px;
+      white-space: nowrap;
+    }
+    .status-pill.pending{ background: rgba(11,95,83,.12); color: rgba(11,95,83,.95); }
+    .status-pill.warning{ background: rgba(15,23,42,.08); color: rgba(15,23,42,.85); }
+    .status-pill.rework{ background: rgba(183,211,75,.18); color: rgba(90,110,25,.95); }
+    .status-pill.ok{ background: rgba(11,95,83,.14); color: rgba(11,95,83,.95); }
+    .status-pill.danger{ background: rgba(244,63,94,.12); color: rgba(159,18,57,.95); }
+    .status-pill.muted{ background: rgba(15,23,42,.08); color: rgba(15,23,42,.65); }
+    .status-pill.priority-low{ background: rgba(15,23,42,.08); color: rgba(15,23,42,.7); }
+    .status-pill.priority-mid{ background: rgba(11,95,83,.12); color: rgba(11,95,83,.95); }
+    .status-pill.priority-high{ background: rgba(234,179,8,.18); color: #a16207; }
+    .status-pill.priority-critical{ background: rgba(244,63,94,.14); color: #be123c; }
+    .status-tile{
+      padding: 18px 18px 20px;
+      border: 1px solid rgba(15,23,42,.06);
+      box-shadow: 0 14px 30px rgba(15,23,42,.08);
+    }
+    .status-filters{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(15,23,42,.08);
+    }
+    .status-filters__intro h3{
+      margin: 0 0 6px;
+      font-size: 15px;
+    }
+    .status-filters__intro p{
+      margin:0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .status-table-wrap{
+      margin-top: 14px;
+      overflow: auto;
+      border: 1px solid rgba(17,24,39,.10);
+      border-radius: 16px;
+      background: rgba(255,255,255,.82);
+    }
+    .status-table{
+      width:100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 860px;
+    }
+    .status-table__head{
+      text-align:left;
+      font-size:13px;
+      color: #f8fafc;
+      background: linear-gradient(90deg, rgba(11,95,83,.95), rgba(9,86,74,.98));
+    }
+    .status-table th,
+    .status-table td{
+      padding: 12px 12px;
+    }
+    .status-table tbody tr{
+      border-top: 1px solid rgba(17,24,39,.08);
+    }
+    .status-table tbody tr:nth-child(even){
+      background: rgba(15,23,42,.02);
+    }
+    .gv-proj-id{
+      font-weight: 800;
+      color: rgba(15,23,42,.92);
+      white-space: nowrap;
+    }
+    .status-empty{
+      color: var(--muted);
+    }
+    .status-count{
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .action-link{
+      text-decoration:none;
+      font-weight:800;
+      color:var(--green);
+      font-size:13px;
+    }
+    .action-link--icon{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.7);
+      box-shadow: 0 6px 14px rgba(15,23,42,.08);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .action-link--icon:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(15,23,42,.12);
+      border-color: rgba(11,95,83,.35);
+    }
+    .action-link__icon{
+      width:16px;
+      height:16px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color: var(--green);
+    }
+    .action-link__icon svg{
+      width:16px;
+      height:16px;
+      display:block;
+      stroke: currentColor;
+    }
+    .header-card{
+      grid-column: span 12;
+      margin-top:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .form-card{
+      grid-column: span 12;
+      margin-top:14px;
+      padding:18px;
+    }
+    .form-section h3{
+      margin:0 0 14px;
+      padding-bottom: 8px;
+      font-size:15px;
+      font-weight: 900;
+      color: #2f5d5b;
+      border-bottom: 2px solid rgba(47,93,91,.7);
+      text-transform: none;
+    }
+    .form-divider{
+      height:1px;
+      margin:18px 0;
+      background: rgba(47,93,91,.35);
+    }
+    .form-grid{
+      display:grid;
+      grid-template-columns: 170px 1fr 170px 1fr;
+      gap:10px 14px;
+      align-items:center;
+    }
+    .form-grid--projetista{
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .form-block{
+      display:grid;
+      grid-template-columns: 170px minmax(0, 1fr);
+      gap:10px 14px;
+      align-items:center;
+    }
+    .form-block--full{
+      grid-column: 1 / -1;
+    }
+    .form-label{
+      background: #2f5d5b;
+      border: 1px solid #274c4a;
+      color:#fff;
+      font-weight:800;
+      border-radius:6px;
+      padding:8px 12px;
+      font-size:13px;
+      display:flex;
+      align-items:center;
+      min-height: 36px;
+    }
+    .form-value,
+    .form-field{
+      width:100%;
+      border-radius:6px;
+      border:1px solid #d6dadd;
+      padding:8px 12px;
+      background: #fff;
+      min-height: 36px;
+      display:flex;
+      align-items:center;
+      white-space: pre-wrap;
+      box-shadow: inset 0 1px 1px rgba(15,23,42,.04);
+    }
+    .form-field{
+      padding:0;
+      background: transparent;
+      border: none;
+      min-height: auto;
+    }
+    .form-wide{
+      grid-column: 2 / -1;
+      align-items:flex-start;
+    }
+    .form-start{
+      grid-column: 1 / 2;
+    }
+    .muted{ color: var(--muted); }
+    .inp{
+      width:100%;
+      border-radius:6px;
+      border:1px solid #d6dadd;
+      padding:8px 12px;
+      background: #fff;
+      outline:none;
+      min-height: 36px;
+    }
+    .inp:focus{ border-color: rgba(47,93,91,.65); box-shadow: 0 0 0 3px rgba(47,93,91,.12); }
+    .inp[type="date"]{ padding-right: 8px; }
+    textarea.inp{ min-height: 90px; resize: vertical; }
+    .btn-soft{
+      border:1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.65);
+      padding:10px 14px;
+      border-radius:8px;
+      font-weight:800;
+      color: var(--text);
+      cursor:pointer;
+    }
+    .btn-primary{
+      border:none;
+      background: #2f5d5b;
+      color:#fff;
+      padding:10px 18px;
+      border-radius:8px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .form-actions{
+      margin-top:14px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .file-link{
+      font-weight:800;
+      color: var(--green);
+      text-decoration:none;
+    }
+    @media (max-width: 1100px){
+      .form-grid{
+        grid-template-columns: 1fr;
+      }
+      .form-grid--projetista{
+        grid-template-columns: 1fr;
+      }
+      .form-block{
+        grid-template-columns: 1fr;
+      }
+      .form-block--full{
+        grid-column: auto;
+      }
+      .form-wide{
+        grid-column: auto;
+      }
+      .form-start{
+        grid-column: auto;
+      }
+    }
+  </style>
+{% endblock %}
+
+
+

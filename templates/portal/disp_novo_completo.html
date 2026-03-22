@@ -1,0 +1,26 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/disp_novo_completo.html
+  Objetivo: Tela do portal: disp novo completo.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - Novo disp. Completo{% endblock %}
+
+{% block sidebar %}{% include "portal/_sidebar_dispositivos.html" %}{% endblock %}
+
+{% block content %}
+  <div class="hero">
+    <h2>Novo disp. Completo</h2>
+    <p>Abertura de dispositivo do zero, com escopo completo.</p>
+  </div>
+
+  {% if ok %}
+    <div class="tile" style="border:1px solid rgba(11,95,83,.25); background:rgba(11,95,83,.06);">
+      <b>Enviado (placeholder).</b> Próximo passo: salvar no banco e gerar ID.
+    </div>
+  {% endif %}
+
+  {% include "portal/_disp_form_base.html" with tipo="Novo disp. Completo" %}
+{% endblock %}

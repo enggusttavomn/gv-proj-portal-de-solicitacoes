@@ -1,0 +1,9 @@
+.\.venv\Scripts\python.exe manage.py runserver
+
+
+# NOVO COMANDO PRA INICIALIZAR
+.\run_three_servers.bat
+
+
+
+.\GUSTAVO_run_three_servers_local.bat

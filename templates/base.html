@@ -1,0 +1,78 @@
+{% load static %}
+{% load django_browser_reload %}
+{#
+  Template: templates/base.html
+  Objetivo: Template base/geral: base.
+  Herda: n?o aplica (template base ou p?gina completa).
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}GV_PROJ{% endblock %}</title>
+
+  <!-- CSS do projeto -->
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% if debug %}{% django_browser_reload_script %}{% endif %}
+</head>
+
+<body class="portal">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">GV</div>
+        <div class="bt">
+          <div class="t1">GE VERNOVA PROJ</div>
+          <div class="t2">Painel de Controle</div>
+        </div>
+      </div>
+
+      <div class="userbox">
+        <div class="name">{{ request.user.get_full_name|default:request.user.get_username }}</div>
+        <div class="role">{{ role_label|default:"" }}</div>
+      </div>
+
+      <!-- FIX: menu rolável -->
+      <div class="sidebar-scroll">
+        {% block sidebar %}{% endblock %}
+      </div>
+
+      <div class="sidebar-footer">
+        <form class="logout-form" method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button class="btn-logout" type="submit">Sair</button>
+        </form>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <img class="ge-mini" src="{% static 'img/ge_vernova.png' %}" alt="GE Vernova">
+        </div>
+
+        <div class="search">
+          <span style="opacity:.65">🔎</span>
+          <input placeholder="Buscar (Ctrl+E)" />
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="font-weight:800; color:var(--muted); font-size:13px;">
+            {{ role_label|default:"" }}
+          </div>
+          <div style="width:38px;height:38px;border-radius:999px;background:rgba(11,95,83,.14);border:1px solid rgba(11,95,83,.25);display:grid;place-items:center;font-weight:900;color:var(--green);">
+            {{ request.user.get_username|slice:":2"|upper }}
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+</body>
+</html>

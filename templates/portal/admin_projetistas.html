@@ -1,0 +1,800 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/admin_projetistas.html
+  Objetivo: Tela do portal: admin projetistas.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}Admin - Projetistas | GV_PROJ{% endblock %}
+
+{% block sidebar %}
+  {% include "portal/_sidebar_admin.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="hero">
+    <div>
+      <h2>Indicadores operacionais</h2>
+      <p>Acompanhe o pipeline de {{ selected_label }}.</p>
+    </div>
+    <div class="hero-extra">
+      <span>Solicitações em andamento</span>
+      <strong>{{ total_count|default:0 }}</strong>
+    </div>
+  </div>
+
+  <div class="filters">
+    <form method="get" class="filter-form">
+      <label for="projetista-select">Mostrar</label>
+      <select id="projetista-select" name="projetista" onchange="this.form.submit()">
+        <option value="">Todos os projetistas</option>
+        {% for option in projetista_options %}
+          <option value="{{ option.id }}" {% if option.id|stringformat:"s" == selected_projetista_id %}selected{% endif %}>
+            {{ option.label }}
+          </option>
+        {% endfor %}
+      </select>
+      <noscript><button class="btn-soft" type="submit">Aplicar</button></noscript>
+    </form>
+
+    <div class="filter-summary">
+      <div class="filter-chip">Visao atual</div>
+      <div class="filter-value">{{ selected_label|default:"Todos os projetistas" }}</div>
+    </div>
+  </div>
+
+  <div class="metrics-grid">
+    <article class="metric-card">
+      <p class="metric-label">Fila total</p>
+      <p class="metric-value">{{ fila_count|default:0 }}</p>
+      <p class="metric-note">{{ fila_pct|default:0 }}% do pipeline atual</p>
+    </article>
+    <article class="metric-card">
+      <p class="metric-label">Em projeto</p>
+      <p class="metric-value">{{ em_projeto_count|default:0 }}</p>
+      <p class="metric-note">{{ em_projeto_pct|default:0 }}% dos ativos</p>
+    </article>
+    <article class="metric-card">
+      <p class="metric-label">Retrabalhos</p>
+      <p class="metric-value">{{ retrabalho_count|default:0 }}</p>
+      <p class="metric-note">{{ retrabalho_pct|default:0 }}% em retrabalho</p>
+    </article>
+    <article class="metric-card">
+      <p class="metric-label">Prontos para envio</p>
+      <p class="metric-value">{{ prontos_count|default:0 }}</p>
+      <p class="metric-note">{{ prontos_pct|default:0 }}% aguardando validação</p>
+    </article>
+  </div>
+
+  <section class="pulse-grid">
+    <article class="pulse-card">
+      <div class="pulse-head">
+        <div>
+          <h3>SLA do projetista</h3>
+          <p>Percentual sem retrabalho no pipeline atual.</p>
+        </div>
+        <div class="pulse-ring" style="--p: {{ sla_pct|default:0 }};">
+          <span>{{ sla_pct|default:0 }}%</span>
+        </div>
+      </div>
+      <div class="pulse-meta">
+        <div>
+          <span>Fila</span>
+          <strong>{{ fila_count|default:0 }}</strong>
+        </div>
+        <div>
+          <span>Em projeto</span>
+          <strong>{{ em_projeto_count|default:0 }}</strong>
+        </div>
+        <div>
+          <span>Retrabalho</span>
+          <strong>{{ retrabalho_count|default:0 }}</strong>
+        </div>
+        <div>
+          <span>Prontos</span>
+          <strong>{{ prontos_count|default:0 }}</strong>
+        </div>
+      </div>
+    </article>
+
+    <article class="pulse-card">
+      <div class="pulse-head">
+        <div>
+          <h3>Distribuição do pipeline</h3>
+          <p>Equilíbrio das etapas em andamento.</p>
+        </div>
+      </div>
+      <div class="donut-wrap">
+        <canvas id="projetistaPipelineChart" role="img" aria-label="Distribuicao do pipeline"></canvas>
+        <div class="donut-center">
+          <span>Total</span>
+          <strong>{{ total_count|default:0 }}</strong>
+        </div>
+        <div class="donut-empty">Sem dados</div>
+      </div>
+      <div class="donut-legend">
+        <div class="legend-item" style="--c:#0b5f53;">
+          <span></span>Fila <strong>{{ fila_count|default:0 }}</strong>
+        </div>
+        <div class="legend-item" style="--c:#2563eb;">
+          <span></span>Em projeto <strong>{{ em_projeto_count|default:0 }}</strong>
+        </div>
+        <div class="legend-item" style="--c:#ca8a04;">
+          <span></span>Retrabalho <strong>{{ retrabalho_count|default:0 }}</strong>
+        </div>
+        <div class="legend-item" style="--c:#16a34a;">
+          <span></span>Prontos <strong>{{ prontos_count|default:0 }}</strong>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="chart-section">
+    <header class="chart-header">
+      <div>
+        <h3>Solicitações abertas</h3>
+        <p>As barras crescem verticalmente com os dias e horas desde a criacao; o eixo X mostra o GV_PROJ.</p>
+      </div>
+      <div class="chart-filters">
+        <button type="button" class="chart-filter active" data-age-range="semana">Semana</button>
+        <button type="button" class="chart-filter" data-age-range="mes">Mês</button>
+      </div>
+    </header>
+    {% if projetista_chart_entries %}
+      <div class="chart-canvas">
+        <canvas id="projetistaAgeChart" role="img" aria-label="Tempo aberto das solicitações em dias e horas"></canvas>
+      </div>
+      <p class="chart-note">Ordenado da solicitacao mais antiga para a mais nova. Os itens preenchidos saem do grafico automaticamente.</p>
+    {% else %}
+      <div class="chart-empty">Nenhuma solicitação ativa encontrada para este projetista.</div>
+    {% endif %}
+  </section>
+
+  <article class="table-card">
+    <div class="table-head">
+      <div>
+        <h3>Resumo por projetista</h3>
+        <p>Filtrar para ver o pipeline por nome e focar na fila mais crítica.</p>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Fila</th>
+            <th>Em projeto</th>
+            <th>Retrabalho</th>
+            <th>Prontos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in projetistas_rows %}
+            <tr class="{% if row.is_selected %}is-selected{% endif %}">
+              <td>{{ row.name }}</td>
+              <td>{{ row.fila }}</td>
+              <td>{{ row.em_projeto }}</td>
+              <td>{{ row.retrabalho }}</td>
+              <td>{{ row.prontos }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5">Nenhum projetista cadastrado.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+
+  {{ projetista_chart_entries|json_script:"projetista-age-data" }}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    (function () {
+      const payloadEl = document.getElementById("projetista-age-data");
+      const entries = payloadEl ? JSON.parse(payloadEl.textContent || "null") || [] : [];
+      const canvas = document.getElementById("projetistaAgeChart");
+      if (entries.length && canvas) {
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          const HOURS_PER_DAY = 24;
+          const ranges = {
+            semana: { max: 7 * HOURS_PER_DAY, step: HOURS_PER_DAY },
+            mes: { max: 30 * HOURS_PER_DAY, step: 2 * HOURS_PER_DAY },
+          };
+          let activeRange = "semana";
+
+          const datasetData = entries.map((entry) => {
+            const ageHours = Number(entry.age_hours);
+            if (Number.isFinite(ageHours)) return ageHours;
+            const ageDays = Number(entry.age_days) || 0;
+            return ageDays * HOURS_PER_DAY;
+          });
+          const xLabels = entries.map((entry) => entry.display_id || entry.label);
+
+          function toDurationParts(totalHours) {
+            const safeHours = Number.isFinite(totalHours) ? Math.max(totalHours, 0) : 0;
+            const rounded = Math.round(safeHours);
+            const days = Math.floor(rounded / HOURS_PER_DAY);
+            const hours = rounded % HOURS_PER_DAY;
+            return { days, hours, rounded };
+          }
+
+          function formatDuration(totalHours) {
+            const { days, hours } = toDurationParts(totalHours);
+            if (!days && !hours) return "0h";
+            if (days && hours) return `${days}d ${hours}h`;
+            if (days) return `${days}d`;
+            return `${hours}h`;
+          }
+
+          const valueLabelPlugin = {
+            id: "valueLabelPlugin",
+            afterDatasetsDraw(chartInstance) {
+              const { ctx: chartCtx } = chartInstance;
+              const meta = chartInstance.getDatasetMeta(0);
+              if (!meta || !meta.data) return;
+              chartCtx.save();
+              chartCtx.fillStyle = "rgba(15,23,42,.75)";
+              chartCtx.font = "600 11px system-ui, -apple-system, Segoe UI, sans-serif";
+              chartCtx.textAlign = "center";
+              chartCtx.textBaseline = "bottom";
+              meta.data.forEach((bar, index) => {
+                const value = datasetData[index] ?? 0;
+                const label = formatDuration(value);
+                chartCtx.fillText(label, bar.x, bar.y - 6);
+              });
+              chartCtx.restore();
+            },
+          };
+
+          const chart = new Chart(ctx, {
+            type: "bar",
+            plugins: [valueLabelPlugin],
+            data: {
+              labels: xLabels,
+              datasets: [
+                {
+                  label: "Tempo em aberto",
+                  data: datasetData,
+                  backgroundColor: entries.map(() => "rgba(11,95,83,.85)"),
+                  borderRadius: 999,
+                  borderWidth: 0,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: {
+                  beginAtZero: true,
+                  grid: {
+                    color: "rgba(15,23,42,.06)",
+                  },
+                  ticks: {
+                    autoSkip: false,
+                  },
+                  title: {
+                    display: true,
+                    text: "GV_PROJ",
+                  },
+                },
+                y: {
+                  beginAtZero: true,
+                  suggestedMax: ranges.semana.max,
+                  ticks: {
+                    stepSize: ranges.semana.step,
+                    callback(value) {
+                      return formatDaysAxis(value);
+                    },
+                  },
+                  grid: {
+                    color: "rgba(15,23,42,.08)",
+                  },
+                  title: {
+                    display: true,
+                    text: "Dias em aberto",
+                  },
+                },
+              },
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label(context) {
+                      const entry = entries[context.dataIndex] || {};
+                      const entryHours = Number(entry.age_hours);
+                      const baseHours = Number.isFinite(entryHours)
+                        ? entryHours
+                        : Number(context.parsed.y) || 0;
+                      const { days, hours, rounded } = toDurationParts(baseHours);
+                      const dayLabel = days === 1 ? "dia" : "dias";
+                      const hourLabel = hours === 1 ? "hora" : "horas";
+                      let timeLabel = "";
+                      if (days && hours) {
+                        timeLabel = `${days} ${dayLabel} e ${hours} ${hourLabel}`;
+                      } else if (days) {
+                        timeLabel = `${days} ${dayLabel}`;
+                      } else {
+                        timeLabel = `${hours || rounded} ${hourLabel}`;
+                      }
+                      const created = entry.created_at
+                        ? new Date(entry.created_at).toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "short",
+                          })
+                        : "";
+                      const suffix = created ? ` · Criado em ${created}` : "";
+                      const labelId = entry.display_id || entry.label || "";
+                      return `${labelId}: ${timeLabel}${suffix}`;
+                    },
+                  },
+                },
+              },
+            },
+          });
+
+          function formatDaysAxis(totalHours) {
+            const safeHours = Number.isFinite(totalHours) ? Math.max(totalHours, 0) : 0;
+            const days = Math.round(safeHours / HOURS_PER_DAY);
+            return `${days}d`;
+          }
+
+          function updateRange(rangeKey) {
+            if (!ranges[rangeKey]) return;
+            activeRange = rangeKey;
+            const range = ranges[activeRange];
+            chart.options.scales.y.suggestedMax = range.max;
+            chart.options.scales.y.ticks.stepSize = range.step;
+            chart.update();
+          }
+
+          const buttons = document.querySelectorAll(".chart-filter[data-age-range]");
+          buttons.forEach((button) => {
+            button.addEventListener("click", () => {
+              const key = button.dataset.ageRange;
+              if (key === activeRange) return;
+              buttons.forEach((btn) => btn.classList.toggle("active", btn === button));
+              updateRange(key);
+            });
+          });
+
+          updateRange(activeRange);
+        }
+      }
+
+      const pipelineCanvas = document.getElementById("projetistaPipelineChart");
+      const pipelineWrap = pipelineCanvas ? pipelineCanvas.parentElement : null;
+      if (pipelineCanvas) {
+        const pipelineData = [
+          { label: "Fila", value: Number("{{ fila_count|default:0 }}"), color: "#0b5f53" },
+          { label: "Em projeto", value: Number("{{ em_projeto_count|default:0 }}"), color: "#2563eb" },
+          { label: "Retrabalho", value: Number("{{ retrabalho_count|default:0 }}"), color: "#ca8a04" },
+          { label: "Prontos", value: Number("{{ prontos_count|default:0 }}"), color: "#16a34a" },
+        ];
+        const total = pipelineData.reduce((sum, item) => sum + (item.value || 0), 0);
+        if (!total) {
+          if (pipelineWrap) pipelineWrap.classList.add("is-empty");
+          return;
+        }
+        new Chart(pipelineCanvas.getContext("2d"), {
+          type: "doughnut",
+          data: {
+            labels: pipelineData.map((item) => item.label),
+            datasets: [
+              {
+                data: pipelineData.map((item) => item.value),
+                backgroundColor: pipelineData.map((item) => item.color),
+                borderWidth: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "68%",
+            plugins: { legend: { display: false } },
+          },
+        });
+      }
+    })();
+  </script>
+
+  <style>
+    .hero-extra {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-weight: 700;
+    }
+    .hero-extra span {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .hero-extra strong {
+      font-size: 34px;
+    }
+
+    .filters{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom: 18px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(17,24,39,.10);
+      background: rgba(255,255,255,.70);
+      box-shadow: 0 10px 24px rgba(0,0,0,.08);
+    }
+    .filter-form{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .filter-form label{
+      font-size:12px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color: var(--muted);
+    }
+    .filter-form select{
+      min-width: 220px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.85);
+      font-weight:700;
+    }
+    .btn-soft{
+      border:1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.85);
+      padding:8px 12px;
+      border-radius:12px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .filter-summary{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .filter-chip{
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      background: rgba(11,95,83,.10);
+      color: var(--green);
+      border: 1px solid rgba(11,95,83,.20);
+      white-space: nowrap;
+    }
+    .filter-value{
+      font-weight:900;
+      color: var(--text);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .metric-card {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(17,24,39,.08);
+      box-shadow: 0 10px 28px rgba(15,23,42,.08);
+    }
+    .metric-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      margin: 0 0 6px;
+    }
+    .metric-value {
+      font-size: 32px;
+      margin: 0;
+      font-weight: 800;
+    }
+    .metric-note {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .pulse-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .pulse-card {
+      padding: 18px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(17,24,39,.08);
+      box-shadow: 0 18px 32px rgba(0,0,0,.08);
+    }
+    .pulse-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .pulse-head h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .pulse-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 320px;
+    }
+    .pulse-ring {
+      width: 64px;
+      height: 64px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(#0b5f53 calc(var(--p) * 1%), rgba(15,23,42,.10) 0);
+      border: 1px solid rgba(17,24,39,.12);
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .pulse-ring::after {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border-radius: 999px;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(17,24,39,.06);
+    }
+    .pulse-ring span {
+      position: relative;
+      font-size: 12px;
+      font-weight: 900;
+      color: #0b5f53;
+    }
+    .pulse-meta {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .pulse-meta div {
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.75);
+      border: 1px solid rgba(17,24,39,.08);
+      text-align: center;
+    }
+    .pulse-meta span {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .pulse-meta strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .donut-wrap {
+      position: relative;
+      min-height: 220px;
+      display: grid;
+      place-items: center;
+    }
+    .donut-wrap canvas {
+      width: 220px;
+      height: 220px;
+    }
+    .donut-center {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-weight: 800;
+      color: var(--text);
+      pointer-events: none;
+    }
+    .donut-center span {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--muted);
+    }
+    .donut-center strong {
+      font-size: 24px;
+    }
+    .donut-empty {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(255,255,255,.7);
+      border-radius: 16px;
+      border: 1px dashed rgba(15,23,42,.12);
+    }
+    .donut-wrap.is-empty .donut-empty {
+      display: flex;
+    }
+    .donut-wrap.is-empty canvas,
+    .donut-wrap.is-empty .donut-center {
+      opacity: .2;
+    }
+    .donut-legend {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 12px;
+      margin-top: 12px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text);
+      font-weight: 700;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.7);
+      border: 1px solid rgba(15,23,42,.08);
+    }
+    .legend-item span {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--c);
+      box-shadow: 0 0 0 3px rgba(15,23,42,.05);
+    }
+
+    .chart-section {
+      margin-bottom: 24px;
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(17,24,39,.08);
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: 0 18px 32px rgba(0,0,0,.08);
+    }
+    .chart-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .chart-header h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .chart-header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 360px;
+    }
+    .chart-filters {
+      display: flex;
+      gap: 10px;
+    }
+    .chart-filter {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(15,23,42,.15);
+      background: rgba(255,255,255,.85);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .chart-filter.active {
+      background: rgba(11,95,83,.15);
+      border-color: rgba(11,95,83,.35);
+      color: var(--green);
+    }
+    .chart-canvas {
+      margin-top: 18px;
+      min-height: 360px;
+    }
+    .chart-canvas canvas {
+      width: 100%;
+      height: 360px;
+    }
+    .chart-note {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .chart-empty {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 14px;
+      background: rgba(15,23,42,.04);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .table-card {
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(17,24,39,.08);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 18px 32px rgba(0,0,0,.08);
+    }
+    .table-head h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .table-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .table-wrapper {
+      margin-top: 16px;
+      overflow: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(17,24,39,.08);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(17,24,39,.08);
+    }
+    th {
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    tbody tr.is-selected {
+      background: rgba(11,95,83,.06);
+    }
+    @media (max-width: 1100px){
+      .filters{ flex-direction:column; align-items:flex-start; }
+    }
+    @media (max-width: 780px) {
+      .chart-header {
+        flex-direction: column;
+      }
+      .chart-filters {
+        width: 100%;
+        justify-content: flex-start;
+      }
+      .pulse-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      th, td {
+        font-size: 12px;
+      }
+    }
+  </style>
+{% endblock %}

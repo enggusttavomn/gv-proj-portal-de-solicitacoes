@@ -1,0 +1,670 @@
+﻿{% extends "base_app.html" %}
+{% load static %}
+{#
+  Template: templates/portal/novo_apontamento.html
+  Objetivo: Tela do portal: novo apontamento.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observacao: este arquivo e um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - Solicitar Novo ou Revisão de Projeto{% endblock %}
+{% block body_class %}legacy-ui{% endblock %}
+
+{% block sidebar %}
+  {% if admin_mode %}
+    {% include "portal/_sidebar_admin.html" %}
+  {% else %}
+    {% include "portal/_sidebar_solicitante.html" %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  <div class="legacy-head">
+    <span class="legacy-logo-spacer" aria-hidden="true"></span>
+    <h2>Solicitar Novo ou Revisão de Projeto</h2>
+    <img class="legacy-logo" src="{% static 'img/ge_vernova.png' %}" alt="GE Vernova">
+  </div>
+
+  <form class="tile form-card" method="post">
+    {% csrf_token %}
+    {% if edit_mode and solicitacao %}
+      <input type="hidden" name="solicitacao_id" value="{% if solicitacao %}{{ solicitacao.id  }}{% endif %}">
+    {% endif %}
+    {% if admin_mode and solicitacao %}
+      <div class="form-alert admin">Admin: editando solicitação #{{ solicitacao.id }} ({{ solicitacao.criado_por.username }})</div>
+    {% endif %}
+
+    {% if ok_message %}
+      <div class="form-alert{% if form_error %} error{% endif %}">{{ ok_message }}</div>
+      {% if not form_error %}
+        <div class="form-alert-actions">
+          <a class="btn-soft" href="{% url 'novo_apontamento' %}">Criar nova solicitação</a>
+        </div>
+      {% endif %}
+    {% endif %}
+
+    <div class="form-grid">
+
+      <div class="form-col">
+
+        <div class="form-row">
+
+          <div class="pill">Solicitante</div>
+
+          {% if solicitacao and solicitacao.criado_por %}
+
+            <input class="inp" type="text" name="solicitante" value="{% if solicitacao %}{{ solicitacao.criado_por.username  }}{% endif %}" readonly required>
+
+          {% else %}
+
+            <input class="inp" type="text" name="solicitante" value="{{ request.user.username|default:'' }}" readonly required>
+
+          {% endif %}
+
+        </div>
+
+
+
+        <div class="form-row">
+
+          <div class="pill">JOB</div>
+
+          <input class="inp" type="text" name="job" value="{% if solicitacao %}{{ solicitacao.job|default:''  }}{% endif %}" required>
+
+        </div>
+
+
+
+        <div class="form-row">
+
+          <div class="pill">JOB's Envolvidas</div>
+
+          <input class="inp" type="text" name="jobs_envolvidas" value="{% if solicitacao %}{{ solicitacao.jobs_envolvidas|default:''  }}{% endif %}" required>
+
+        </div>
+
+
+
+        <div class="form-row">
+
+          <div class="pill">Descrição do Dispositivo</div>
+
+          <input class="inp" id="descricao_ferramenta_input" type="text" name="descricao_ferramenta" value="{% if solicitacao %}{{ solicitacao.descricao_ferramenta|default:solicitacao.descricao }}{% endif %}" required>
+
+        </div>
+
+
+
+        <div class="form-row">
+
+          <div class="pill">Desenho de referência + PT</div>
+
+          <input class="inp" type="text" name="desenho_referencia" value="{% if solicitacao %}{{ solicitacao.desenho_referencia|default:'' }}{% endif %}" required>
+
+        </div>
+
+
+
+        <div class="form-row">
+
+          <div class="pill">WC</div>
+
+          <input class="inp" type="text" name="wc" value="{% if solicitacao %}{{ solicitacao.wc|default:''  }}{% endif %}" required>
+
+        </div>
+
+
+
+        <div class="form-row">
+
+          <div class="pill">Qtd.</div>
+
+          <input class="inp" type="number" name="quantidade" min="1" value="{% if solicitacao %}{{ solicitacao.quantidade|default:1  }}{% else %}1{% endif %}" required>
+
+        </div>
+
+
+
+        <div class="form-row">
+
+          <div class="pill">Evento SAP</div>
+
+          <select class="inp" name="evento_sap" required>
+
+                      <option value="">Selecione</option>
+
+                      <option value="Acabamento LAC" {% if solicitacao and solicitacao.evento_sap == "Acabamento LAC" %}selected{% endif %}>Acabamento LAC</option>
+
+                      <option value="Acabamento MAC" {% if solicitacao and solicitacao.evento_sap == "Acabamento MAC" %}selected{% endif %}>Acabamento MAC</option>
+
+                      <option value="Acabar Conjunto" {% if solicitacao and solicitacao.evento_sap == "Acabar Conjunto" %}selected{% endif %}>Acabar Conjunto</option>
+
+                      <option value="Acamar Estator" {% if solicitacao and solicitacao.evento_sap == "Acamar Estator" %}selected{% endif %}>Acamar Estator</option>
+
+                      <option value="Acamar Rotor" {% if solicitacao and solicitacao.evento_sap == "Acamar Rotor" %}selected{% endif %}>Acamar Rotor</option>
+
+                      <option value="Broquear Eixo" {% if solicitacao and solicitacao.evento_sap == "Broquear Eixo" %}selected{% endif %}>Broquear Eixo</option>
+
+                      <option value="Calibrar Bocas Carcaca" {% if solicitacao and solicitacao.evento_sap == "Calibrar Bocas Carcaca" %}selected{% endif %}>Calibrar Bocas Carcaca</option>
+
+                      <option value="Cortar Blank Laser" {% if solicitacao and solicitacao.evento_sap == "Cortar Blank Laser" %}selected{% endif %}>Cortar Blank Laser</option>
+
+                      <option value="Cortar Carcaca" {% if solicitacao and solicitacao.evento_sap == "Cortar Carcaca" %}selected{% endif %}>Cortar Carcaca</option>
+
+                      <option value="Cortar Lamina da Excitatriz" {% if solicitacao and solicitacao.evento_sap == "Cortar Lamina da Excitatriz" %}selected{% endif %}>Cortar Lamina da Excitatriz</option>
+
+                      <option value="Cortar Lamina dos Polos" {% if solicitacao and solicitacao.evento_sap == "Cortar Lamina dos Polos" %}selected{% endif %}>Cortar Lamina dos Polos</option>
+
+                      <option value="Cortar Lamina Magnetica" {% if solicitacao and solicitacao.evento_sap == "Cortar Lamina Magnetica" %}selected{% endif %}>Cortar Lamina Magnetica</option>
+
+                      <option value="Cortar Polos Comutacao" {% if solicitacao and solicitacao.evento_sap == "Cortar Polos Comutacao" %}selected{% endif %}>Cortar Polos Comutacao</option>
+
+                      <option value="Cortar Polos Excitacao" {% if solicitacao and solicitacao.evento_sap == "Cortar Polos Excitacao" %}selected{% endif %}>Cortar Polos Excitacao</option>
+
+                      <option value="Desbastar Eixo" {% if solicitacao and solicitacao.evento_sap == "Desbastar Eixo" %}selected{% endif %}>Desbastar Eixo</option>
+
+                      <option value="Desmontar &amp; Remontar Motor" {% if solicitacao and solicitacao.evento_sap == "Desmontar & Remontar Motor" %}selected{% endif %}>Desmontar &amp; Remontar Motor</option>
+
+                      <option value="Desmontar Motor" {% if solicitacao and solicitacao.evento_sap == "Desmontar Motor" %}selected{% endif %}>Desmontar Motor</option>
+
+                      <option value="Embalar" {% if solicitacao and solicitacao.evento_sap == "Embalar" %}selected{% endif %}>Embalar</option>
+
+                      <option value="Empilhar Carcaca" {% if solicitacao and solicitacao.evento_sap == "Empilhar Carcaca" %}selected{% endif %}>Empilhar Carcaca</option>
+
+                      <option value="Empilhar Estator" {% if solicitacao and solicitacao.evento_sap == "Empilhar Estator" %}selected{% endif %}>Empilhar Estator</option>
+
+                      <option value="Empilhar Estator Excitatriz" {% if solicitacao and solicitacao.evento_sap == "Empilhar Estator Excitatriz" %}selected{% endif %}>Empilhar Estator Excitatriz</option>
+
+                      <option value="Empilhar Excitatriz" {% if solicitacao and solicitacao.evento_sap == "Empilhar Excitatriz" %}selected{% endif %}>Empilhar Excitatriz</option>
+
+                      <option value="Empilhar Polo" {% if solicitacao and solicitacao.evento_sap == "Empilhar Polo" %}selected{% endif %}>Empilhar Polo</option>
+
+                      <option value="Empilhar Polos de Comutacao" {% if solicitacao and solicitacao.evento_sap == "Empilhar Polos de Comutacao" %}selected{% endif %}>Empilhar Polos de Comutacao</option>
+
+                      <option value="Empilhar Polos de Excitacao" {% if solicitacao and solicitacao.evento_sap == "Empilhar Polos de Excitacao" %}selected{% endif %}>Empilhar Polos de Excitacao</option>
+
+                      <option value="Empilhar Rotor" {% if solicitacao and solicitacao.evento_sap == "Empilhar Rotor" %}selected{% endif %}>Empilhar Rotor</option>
+
+                      <option value="Empilhar Rotor - Nucleo #2" {% if solicitacao and solicitacao.evento_sap == "Empilhar Rotor - Nucleo #2" %}selected{% endif %}>Empilhar Rotor - Nucleo #2</option>
+
+                      <option value="Empilhar Rotor Excitatriz" {% if solicitacao and solicitacao.evento_sap == "Empilhar Rotor Excitatriz" %}selected{% endif %}>Empilhar Rotor Excitatriz</option>
+
+                      <option value="Enrolar Polos Star Punching" {% if solicitacao and solicitacao.evento_sap == "Enrolar Polos Star Punching" %}selected{% endif %}>Enrolar Polos Star Punching</option>
+
+                      <option value="Estampar Blank" {% if solicitacao and solicitacao.evento_sap == "Estampar Blank" %}selected{% endif %}>Estampar Blank</option>
+
+                      <option value="Estampar Estator" {% if solicitacao and solicitacao.evento_sap == "Estampar Estator" %}selected{% endif %}>Estampar Estator</option>
+
+                      <option value="Estampar Rotor" {% if solicitacao and solicitacao.evento_sap == "Estampar Rotor" %}selected{% endif %}>Estampar Rotor</option>
+
+                      <option value="Fabricar Armacao do Rotor" {% if solicitacao and solicitacao.evento_sap == "Fabricar Armacao do Rotor" %}selected{% endif %}>Fabricar Armacao do Rotor</option>
+
+                      <option value="Fabricar Base" {% if solicitacao and solicitacao.evento_sap == "Fabricar Base" %}selected{% endif %}>Fabricar Base</option>
+
+                      <option value="Fabricar Bobina Comutacao" {% if solicitacao and solicitacao.evento_sap == "Fabricar Bobina Comutacao" %}selected{% endif %}>Fabricar Bobina Comutacao</option>
+
+                      <option value="Fabricar Bobina Equalizadora" {% if solicitacao and solicitacao.evento_sap == "Fabricar Bobina Equalizadora" %}selected{% endif %}>Fabricar Bobina Equalizadora</option>
+
+                      <option value="Fabricar Bobina Rotor" {% if solicitacao and solicitacao.evento_sap == "Fabricar Bobina Rotor" %}selected{% endif %}>Fabricar Bobina Rotor</option>
+
+                      <option value="Fabricar Bobinas do Estator" {% if solicitacao and solicitacao.evento_sap == "Fabricar Bobinas do Estator" %}selected{% endif %}>Fabricar Bobinas do Estator</option>
+
+                      <option value="Fabricar Camara de Ar" {% if solicitacao and solicitacao.evento_sap == "Fabricar Camara de Ar" %}selected{% endif %}>Fabricar Camara de Ar</option>
+
+                      <option value="Fabricar Carcaca" {% if solicitacao and solicitacao.evento_sap == "Fabricar Carcaca" %}selected{% endif %}>Fabricar Carcaca</option>
+
+                      <option value="Fabricar Coletor" {% if solicitacao and solicitacao.evento_sap == "Fabricar Coletor" %}selected{% endif %}>Fabricar Coletor</option>
+
+                      <option value="Fabricar Estator da Excitatriz" {% if solicitacao and solicitacao.evento_sap == "Fabricar Estator da Excitatriz" %}selected{% endif %}>Fabricar Estator da Excitatriz</option>
+
+                      <option value="Fabricar Excitatriz ou Coletor" {% if solicitacao and solicitacao.evento_sap == "Fabricar Excitatriz ou Coletor" %}selected{% endif %}>Fabricar Excitatriz ou Coletor</option>
+
+                      <option value="Fabricar Miscelanea Estator" {% if solicitacao and solicitacao.evento_sap == "Fabricar Miscelanea Estator" %}selected{% endif %}>Fabricar Miscelanea Estator</option>
+
+                      <option value="Fabricar Miscelanea MTG" {% if solicitacao and solicitacao.evento_sap == "Fabricar Miscelanea MTG" %}selected{% endif %}>Fabricar Miscelanea MTG</option>
+
+                      <option value="Fabricar Miscelanea Rotor" {% if solicitacao and solicitacao.evento_sap == "Fabricar Miscelanea Rotor" %}selected{% endif %}>Fabricar Miscelanea Rotor</option>
+
+                      <option value="Fabricar Modulos Equalizadores" {% if solicitacao and solicitacao.evento_sap == "Fabricar Modulos Equalizadores" %}selected{% endif %}>Fabricar Modulos Equalizadores</option>
+
+                      <option value="Fabricar Polos" {% if solicitacao and solicitacao.evento_sap == "Fabricar Polos" %}selected{% endif %}>Fabricar Polos</option>
+
+                      <option value="Fabricar Polos Comutacao" {% if solicitacao and solicitacao.evento_sap == "Fabricar Polos Comutacao" %}selected{% endif %}>Fabricar Polos Comutacao</option>
+
+                      <option value="Fabricar Polos de Excitacao" {% if solicitacao and solicitacao.evento_sap == "Fabricar Polos de Excitacao" %}selected{% endif %}>Fabricar Polos de Excitacao</option>
+
+                      <option value="Fabricar Rotor da Excitatriz" {% if solicitacao and solicitacao.evento_sap == "Fabricar Rotor da Excitatriz" %}selected{% endif %}>Fabricar Rotor da Excitatriz</option>
+
+                      <option value="Fabricar Strip Coil" {% if solicitacao and solicitacao.evento_sap == "Fabricar Strip Coil" %}selected{% endif %}>Fabricar Strip Coil</option>
+
+                      <option value="Fabricar Tampas" {% if solicitacao and solicitacao.evento_sap == "Fabricar Tampas" %}selected{% endif %}>Fabricar Tampas</option>
+
+                      <option value="Frezar Eixo" {% if solicitacao and solicitacao.evento_sap == "Frezar Eixo" %}selected{% endif %}>Frezar Eixo</option>
+
+                      <option value="Isolar" {% if solicitacao and solicitacao.evento_sap == "Isolar" %}selected{% endif %}>Isolar</option>
+
+                      <option value="Lixar &amp; Envernizar" {% if solicitacao and solicitacao.evento_sap == "Lixar & Envernizar" %}selected{% endif %}>Lixar &amp; Envernizar</option>
+
+                      <option value="Miscelanea de Pintura" {% if solicitacao and solicitacao.evento_sap == "Miscelanea de Pintura" %}selected{% endif %}>Miscelanea de Pintura</option>
+
+                      <option value="Montar Eixo no Pacote" {% if solicitacao and solicitacao.evento_sap == "Montar Eixo no Pacote" %}selected{% endif %}>Montar Eixo no Pacote</option>
+
+                      <option value="Montar Motor" {% if solicitacao and solicitacao.evento_sap == "Montar Motor" %}selected{% endif %}>Montar Motor</option>
+
+                      <option value="Montar Motor LAC" {% if solicitacao and solicitacao.evento_sap == "Montar Motor LAC" %}selected{% endif %}>Montar Motor LAC</option>
+
+                      <option value="Montar Motores MAC" {% if solicitacao and solicitacao.evento_sap == "Montar Motores MAC" %}selected{% endif %}>Montar Motores MAC</option>
+
+                      <option value="Montar Polos no Rotor" {% if solicitacao and solicitacao.evento_sap == "Montar Polos no Rotor" %}selected{% endif %}>Montar Polos no Rotor</option>
+
+                      <option value="Montar Rotor" {% if solicitacao and solicitacao.evento_sap == "Montar Rotor" %}selected{% endif %}>Montar Rotor</option>
+
+                      <option value="MTG Eixo no Nucleo" {% if solicitacao and solicitacao.evento_sap == "MTG Eixo no Nucleo" %}selected{% endif %}>MTG Eixo no Nucleo</option>
+
+                      <option value="MTG Eixo no Nucleo e Comutador" {% if solicitacao and solicitacao.evento_sap == "MTG Eixo no Nucleo e Comutador" %}selected{% endif %}>MTG Eixo no Nucleo e Comutador</option>
+
+                      <option value="MTG Estator na Carcaca" {% if solicitacao and solicitacao.evento_sap == "MTG Estator na Carcaca" %}selected{% endif %}>MTG Estator na Carcaca</option>
+
+                      <option value="RCI &amp; TCI" {% if solicitacao and solicitacao.evento_sap == "RCI & TCI" %}selected{% endif %}>RCI &amp; TCI</option>
+
+                      <option value="Reenrolar Polos" {% if solicitacao and solicitacao.evento_sap == "Reenrolar Polos" %}selected{% endif %}>Reenrolar Polos</option>
+
+                      <option value="Rejuv Estator" {% if solicitacao and solicitacao.evento_sap == "Rejuv Estator" %}selected{% endif %}>Rejuv Estator</option>
+
+                      <option value="Rejuv Rotor" {% if solicitacao and solicitacao.evento_sap == "Rejuv Rotor" %}selected{% endif %}>Rejuv Rotor</option>
+
+                      <option value="Remontar Motor LAC" {% if solicitacao and solicitacao.evento_sap == "Remontar Motor LAC" %}selected{% endif %}>Remontar Motor LAC</option>
+
+                      <option value="Resistor de Descarga" {% if solicitacao and solicitacao.evento_sap == "Resistor de Descarga" %}selected{% endif %}>Resistor de Descarga</option>
+
+                      <option value="Retificar Eixo" {% if solicitacao and solicitacao.evento_sap == "Retificar Eixo" %}selected{% endif %}>Retificar Eixo</option>
+
+                      <option value="Retificar Eixo LAC" {% if solicitacao and solicitacao.evento_sap == "Retificar Eixo LAC" %}selected{% endif %}>Retificar Eixo LAC</option>
+
+                      <option value="Rotor Completo" {% if solicitacao and solicitacao.evento_sap == "Rotor Completo" %}selected{% endif %}>Rotor Completo</option>
+
+                      <option value="RSI &amp; TSI" {% if solicitacao and solicitacao.evento_sap == "RSI & TSI" %}selected{% endif %}>RSI &amp; TSI</option>
+
+                      <option value="Run-Out e Polir Colos" {% if solicitacao and solicitacao.evento_sap == "Run-Out e Polir Colos" %}selected{% endif %}>Run-Out e Polir Colos</option>
+
+                      <option value="Run-out Rotor" {% if solicitacao and solicitacao.evento_sap == "Run-out Rotor" %}selected{% endif %}>Run-out Rotor</option>
+
+                      <option value="Servico de Reparo" {% if solicitacao and solicitacao.evento_sap == "Servico de Reparo" %}selected{% endif %}>Servico de Reparo</option>
+
+                      <option value="Usinar Anel Magnetico" {% if solicitacao and solicitacao.evento_sap == "Usinar Anel Magnetico" %}selected{% endif %}>Usinar Anel Magnetico</option>
+
+                      <option value="Usinar Base" {% if solicitacao and solicitacao.evento_sap == "Usinar Base" %}selected{% endif %}>Usinar Base</option>
+
+                      <option value="Usinar Carcaca" {% if solicitacao and solicitacao.evento_sap == "Usinar Carcaca" %}selected{% endif %}>Usinar Carcaca</option>
+
+                      <option value="Usinar Comutador e Polir Colos" {% if solicitacao and solicitacao.evento_sap == "Usinar Comutador e Polir Colos" %}selected{% endif %}>Usinar Comutador e Polir Colos</option>
+
+                      <option value="Usinar Eixo" {% if solicitacao and solicitacao.evento_sap == "Usinar Eixo" %}selected{% endif %}>Usinar Eixo</option>
+
+                      <option value="Usinar eixo com armacao" {% if solicitacao and solicitacao.evento_sap == "Usinar eixo com armacao" %}selected{% endif %}>Usinar eixo com armacao</option>
+
+                      <option value="Usinar Miscelanea Estator" {% if solicitacao and solicitacao.evento_sap == "Usinar Miscelanea Estator" %}selected{% endif %}>Usinar Miscelanea Estator</option>
+
+                      <option value="Usinar Miscelanea MTG" {% if solicitacao and solicitacao.evento_sap == "Usinar Miscelanea MTG" %}selected{% endif %}>Usinar Miscelanea MTG</option>
+
+                      <option value="Usinar Miscelanea Rotor" {% if solicitacao and solicitacao.evento_sap == "Usinar Miscelanea Rotor" %}selected{% endif %}>Usinar Miscelanea Rotor</option>
+
+                      <option value="Usinar Tampas" {% if solicitacao and solicitacao.evento_sap == "Usinar Tampas" %}selected{% endif %}>Usinar Tampas</option>
+
+                      <option value="VPI LAC" {% if solicitacao and solicitacao.evento_sap == "VPI LAC" %}selected{% endif %}>VPI LAC</option>
+
+                      <option value="VPI MAC" {% if solicitacao and solicitacao.evento_sap == "VPI MAC" %}selected{% endif %}>VPI MAC</option>
+
+                    </select>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="form-col">
+
+        <div class="form-row">
+
+          <div class="pill">Área</div>
+
+          <select class="inp" name="area" required>
+
+                      <option value="">Selecione</option>
+
+                      <option value="Acamacao" {% if solicitacao and solicitacao.area == "Acamacao" %}selected{% endif %}>Acamacao</option>
+
+                      <option value="Bobinas" {% if solicitacao and solicitacao.area == "Bobinas" %}selected{% endif %}>Bobinas</option>
+
+                      <option value="Caldeiraria" {% if solicitacao and solicitacao.area == "Caldeiraria" %}selected{% endif %}>Caldeiraria</option>
+
+                      <option value="Embalagem" {% if solicitacao and solicitacao.area == "Embalagem" %}selected{% endif %}>Embalagem</option>
+
+                      <option value="Empilhamento Estator" {% if solicitacao and solicitacao.area == "Empilhamento Estator" %}selected{% endif %}>Empilhamento Estator</option>
+
+                      <option value="Empilhamento Excitatriz Rotor" {% if solicitacao and solicitacao.area == "Empilhamento Excitatriz Rotor" %}selected{% endif %}>Empilhamento Excitatriz Rotor</option>
+
+                      <option value="Empilhamento Rotor Armadura" {% if solicitacao and solicitacao.area == "Empilhamento Rotor Armadura" %}selected{% endif %}>Empilhamento Rotor Armadura</option>
+
+                      <option value="Empilhar Estator Excitatriz" {% if solicitacao and solicitacao.area == "Empilhar Estator Excitatriz" %}selected{% endif %}>Empilhar Estator Excitatriz</option>
+
+                      <option value="Estamparia" {% if solicitacao and solicitacao.area == "Estamparia" %}selected{% endif %}>Estamparia</option>
+
+                      <option value="LAC" {% if solicitacao and solicitacao.area == "LAC" %}selected{% endif %}>LAC</option>
+
+                      <option value="MAC" {% if solicitacao and solicitacao.area == "MAC" %}selected{% endif %}>MAC</option>
+
+                      <option value="Pintura" {% if solicitacao and solicitacao.area == "Pintura" %}selected{% endif %}>Pintura</option>
+
+                      <option value="Polos / Strip" {% if solicitacao and solicitacao.area == "Polos / Strip" %}selected{% endif %}>Polos / Strip</option>
+
+                      <option value="Rotor Inducao" {% if solicitacao and solicitacao.area == "Rotor Inducao" %}selected{% endif %}>Rotor Inducao</option>
+
+                      <option value="Servicos" {% if solicitacao and solicitacao.area == "Servicos" %}selected{% endif %}>Servicos</option>
+
+                      <option value="Teste final" {% if solicitacao and solicitacao.area == "Teste final" %}selected{% endif %}>Teste final</option>
+
+                      <option value="Usinagem Leve" {% if solicitacao and solicitacao.area == "Usinagem Leve" %}selected{% endif %}>Usinagem Leve</option>
+
+                      <option value="Usinagem Pesada" {% if solicitacao and solicitacao.area == "Usinagem Pesada" %}selected{% endif %}>Usinagem Pesada</option>
+
+                    </select>
+
+        </div>
+
+
+
+        <div class="form-row">
+
+          <div class="pill">Sufixo</div>
+
+          <input class="inp" type="text" id="sufixo_input" name="sufixo" value="{% if solicitacao %}{{ solicitacao.sufixo|default:''  }}{% endif %}" required>
+
+        </div>
+
+
+
+        <div class="form-row">
+
+          <div class="pill">Data da Solicitação</div>
+
+          <input class="inp" type="text" name="solicitado_em" readonly value="{% if solicitacao and solicitacao.solicitado_em %}{{ solicitacao.solicitado_em|date:'d/m/Y h:i A' }}{% else %}{{ solicitado_em_default|date:'d/m/Y h:i A' }}{% endif %}" required>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="form-row form-row-wide form-row-full">
+
+        <div class="pill">Obs. de Solicitação do Projeto</div>
+
+        <textarea class="inp" name="observacoes_projeto" rows="4">{% if solicitacao %}{{ solicitacao.observacoes_projeto|default:'' }}{% endif %}</textarea>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="form-divider"></div>
+
+    <div class="form-bottom">
+      <div class="form-row">
+        <div class="pill">Nº do MOC</div>
+        <input class="inp" type="text" name="numero_moc" value="{% if solicitacao %}{{ solicitacao.numero_moc|default:''  }}{% endif %}" required>
+      </div>
+
+      <div class="form-row">
+        <div class="pill">Nº do Dispositivo</div>
+        <input class="inp" type="text" name="numero_dispositivo" value="{% if solicitacao %}{{ solicitacao.numero_dispositivo|default:''  }}{% endif %}" required>
+      </div>
+
+      <div class="form-row">
+        <div class="pill">Data Baseline AME Projeto</div>
+        <input class="inp" type="date" name="baseline_ame" value="{% if solicitacao %}{{ solicitacao.baseline_ame|date:'Y-m-d'  }}{% endif %}" required>
+      </div>
+
+      <div class="form-row">
+        <div class="pill">Data Baseline Produção Entrega Kit</div>
+        <input class="inp" type="date" name="baseline_producao" value="{% if solicitacao %}{{ solicitacao.baseline_producao|date:'Y-m-d'  }}{% endif %}" required>
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+      {% if admin_mode %}
+        <button type="submit" class="btn-primary">Salvar ajustes</button>
+        {% if edit_mode %}
+          <button type="submit" name="action" value="delete" class="btn-danger" onclick="return confirm('Excluir solicitação?');">Excluir</button>
+        {% endif %}
+      {% else %}
+        {% if edit_mode %}
+          <button type="submit" class="btn-soft">Salvar ajustes</button>
+          <button type="submit" name="status" value="ENVIAR" class="btn-primary">ENVIAR</button>
+          <button type="submit" name="action" value="delete" class="btn-danger" onclick="return confirm('Excluir solicitação?');">Excluir</button>
+        {% else %}
+          <button type="submit" name="status" value="ENVIAR" class="btn-primary">ENVIAR</button>
+        {% endif %}
+      {% endif %}
+    </div>
+  </form>
+
+  <script>
+    (function () {
+      const sufixoInput = document.getElementById("sufixo_input");
+      const descInput = document.getElementById("descricao_ferramenta_input");
+      const descUrl = "{% url 'buscar_descricao_dispositivo' %}";
+      if (!sufixoInput || !descInput) return;
+
+      let timer = null;
+
+      function updateDescricao() {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          const codigo = (sufixoInput.value || "").trim();
+          if (!codigo) {
+            descInput.value = "";
+            return;
+          }
+          const params = new URLSearchParams({ codigo });
+          fetch(`${descUrl}?${params.toString()}`, { credentials: "same-origin" })
+            .then((res) => (res.ok ? res.json() : { descricao: "" }))
+            .then((data) => {
+              descInput.value = data.descricao || "";
+            })
+            .catch(() => {
+              descInput.value = "";
+            });
+        }, 250);
+      }
+
+      sufixoInput.addEventListener("input", updateDescricao);
+      updateDescricao();
+    })();
+  </script>
+
+  <style>
+    .content{
+      background:#fff;
+      border:1px solid #9da3aa;
+      border-radius:4px;
+      box-shadow:none;
+      padding:10px 12px 14px;
+      min-height: auto;
+    }
+    .legacy-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:4px 6px 8px;
+      border-bottom:1px solid #9da3aa;
+      margin-bottom:10px;
+    }
+    .legacy-head h2{
+      margin:0;
+      font-size:18px;
+      font-weight:700;
+      text-align:center;
+      flex:1;
+    }
+    .legacy-logo{
+      height:26px;
+      object-fit:contain;
+    }
+    .legacy-logo-spacer{
+      width:26px;
+      height:26px;
+    }
+    .form-card{
+      grid-column: span 12;
+      margin-top:0;
+      padding:0;
+      background: transparent;
+      border:0;
+      box-shadow:none;
+    }
+    .form-alert{
+      margin:0 0 12px;
+      padding:6px 8px;
+      border-radius:4px;
+      background: #eef6f4;
+      border:1px solid #9dbab3;
+      font-weight:700;
+      font-size:12px;
+    }
+    .form-alert.admin{
+      background: #f3f5f7;
+      border-color: #c7cdd3;
+    }
+    .form-alert.error{
+      background: #fdecec;
+      border-color: #e3a2a2;
+      color: #7a1f1f;
+    }
+    .form-alert-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin:0 0 14px;
+    }
+    .form-grid{
+      display:grid;
+      grid-template-columns: minmax(320px, 1fr) minmax(260px, 1fr);
+      gap:6px 12px;
+      padding:0;
+    }
+    .form-col{
+      display:grid;
+      gap:6px;
+    }
+    .form-row{
+      display:grid;
+      grid-template-columns: 170px 1fr;
+      gap:6px 8px;
+      align-items:center;
+    }
+    .form-row-wide{
+      align-items:start;
+    }
+    .form-row-full{
+      grid-column: 1 / -1;
+    }
+    .form-divider{
+      height:1px;
+      background: #9da3aa;
+      margin:10px 0;
+    }
+    .form-bottom{
+      display:grid;
+      gap:6px;
+      padding:0;
+      max-width:520px;
+      width:100%;
+      margin-right:auto;
+    }
+    .form-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      padding:0;
+      margin-top:10px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      background: #2f6664;
+      color:#fff;
+      font-weight:700;
+      border-radius:2px;
+      padding:6px 8px;
+      font-size:12px;
+      display:flex;
+      align-items:center;
+      min-height:26px;
+    }
+    .inp{
+      width:100%;
+      border-radius:2px;
+      border:1px solid #a9b0b8;
+      padding:6px 8px;
+      background: #fff;
+      outline:none;
+      font-size:12px;
+      min-height:26px;
+    }
+    textarea.inp{
+      min-height:78px;
+      resize:vertical;
+    }
+    .inp:focus{
+      border-color: #3e8077;
+      box-shadow: 0 0 0 2px rgba(47,102,100,.15);
+    }
+    .btn-soft{
+      border:1px solid #a9b0b8;
+      background: #f6f7f9;
+      padding:5px 10px;
+      border-radius:2px;
+      font-weight:700;
+      font-size:12px;
+      color: var(--text);
+      cursor:pointer;
+      text-decoration:none;
+    }
+    .btn-primary{
+      border:1px solid #9da3aa;
+      background: #f2f3f5;
+      color:#0b5f53;
+      padding:5px 12px;
+      border-radius:2px;
+      font-weight:800;
+      cursor:pointer;
+      font-size:12px;
+    }
+    .btn-danger{
+      border:1px solid #c15a5a;
+      background: #f2dada;
+      color:#7a1f1f;
+      padding:5px 10px;
+      border-radius:2px;
+      font-weight:800;
+      cursor:pointer;
+      font-size:12px;
+    }
+    @media (max-width: 1100px){
+      .form-grid{
+        grid-template-columns: 1fr;
+      }
+      .form-row{
+        grid-template-columns: 1fr;
+      }
+      .form-row-full{
+        grid-column: auto;
+      }
+    }
+  </style>
+{% endblock %}
+

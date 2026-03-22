@@ -1,0 +1,111 @@
+{#
+  Template: templates/portal/_disp_form_base.html
+  Objetivo: Tela do portal:  disp form base.
+  Herda: n?o aplica (template base ou p?gina completa).
+  Blocos: nenhum.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+<form class="tile" method="post" enctype="multipart/form-data" style="padding:18px;">
+  {% csrf_token %}
+
+  <div style="display:flex; gap:16px; flex-wrap:wrap;">
+    <div style="flex: 1 1 560px; min-width: 320px;">
+      <h3 style="margin:0 0 10px;">Abertura</h3>
+
+      <div style="display:grid; grid-template-columns: 180px 1fr; gap:10px 12px;">
+        <div class="pill">Tipo</div>
+        <input class="inp" value="{{ tipo }}" readonly>
+
+        <div class="pill">Solicitante</div>
+        <input class="inp" value="{{ request.user.username|default:'' }}" readonly>
+
+        <div class="pill">Seção</div>
+        <input class="inp" name="secao" placeholder="Ex: Estamparia / Qualidade">
+
+        <div class="pill">JOB</div>
+        <input class="inp" name="job" placeholder="Ex: JOB-12345">
+
+        <div class="pill">MOC</div>
+        <input class="inp" name="moc" placeholder="Ex: MOC-000123">
+
+        <div class="pill">WC</div>
+        <input class="inp" name="wc" placeholder="Ex: WC-001">
+
+        <div class="pill">Descrição objetiva</div>
+        <textarea class="inp" name="descricao" rows="4" placeholder="O que é, por que existe, qual critério de aceite."></textarea>
+
+        <div class="pill">Evidências / anexos</div>
+        <input class="inp" type="file" name="anexos">
+      </div>
+
+      <div style="margin-top:10px; color:var(--muted); font-size:12px;">
+        Padrão: motivo + evidência + critério objetivo. Isso elimina retrabalho inútil.
+      </div>
+    </div>
+
+    <div style="flex: 0 0 380px; min-width: 320px;">
+      <h3 style="margin:0 0 10px;">Controle</h3>
+
+      <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
+        <div class="pill">Prioridade</div>
+        <select class="inp" name="prioridade">
+          <option value="">Selecione</option>
+          <option>Alta</option>
+          <option>Média</option>
+          <option>Baixa</option>
+        </select>
+
+        <div class="pill">Prazo desejado</div>
+        <input class="inp" type="date" name="prazo">
+
+        <div class="pill">Observações</div>
+        <textarea class="inp" name="obs" rows="4" placeholder="Restrições, riscos, dependências..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
+    <button type="reset" class="btn-soft">🧹 Limpar</button>
+    <button type="submit" class="btn-primary">✅ Enviar</button>
+  </div>
+
+  <style>
+    .pill{
+      background: rgba(11,95,83,.92);
+      color:#fff;
+      font-weight:800;
+      border-radius:10px;
+      padding:9px 12px;
+      font-size:13px;
+      display:flex;
+      align-items:center;
+    }
+    .inp{
+      width:100%;
+      border-radius:10px;
+      border:1px solid rgba(17,24,39,.14);
+      padding:10px 12px;
+      background: rgba(255,255,255,.65);
+      outline:none;
+    }
+    .inp:focus{ border-color: rgba(11,95,83,.35); box-shadow: 0 0 0 3px rgba(11,95,83,.10); }
+    .btn-soft{
+      border:1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.65);
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:800;
+      color: var(--text);
+      cursor:pointer;
+    }
+    .btn-primary{
+      border:none;
+      background: var(--green);
+      color:#fff;
+      padding:10px 16px;
+      border-radius:999px;
+      font-weight:900;
+      cursor:pointer;
+    }
+  </style>
+</form>

@@ -1,0 +1,234 @@
+{% extends "base_app.html" %}
+{% load dict_utils %}
+{#
+  Template: templates/portal/admin_auditoria_logs.html
+  Objetivo: Tela do portal: admin auditoria logs.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}Admin · Auditoria e Logs | GV_PROJ{% endblock %}
+
+{% block sidebar %}
+  {% include "portal/_sidebar_admin.html" %}
+{% endblock %}
+
+{% block content %}
+  <style>
+    .log-meta {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 14px;
+      color: rgba(15, 23, 42, 0.75);
+    }
+    .log-meta strong {
+      font-size: 16px;
+      color: #0f172a;
+    }
+    .log-meta__pill {
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      background: rgba(15, 23, 42, 0.08);
+      color: #0b5f53;
+    }
+    .log-filters {
+      margin-top: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 18px;
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .log-filters label {
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .filter-field input,
+    .filter-field select {
+      font-size: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      padding: 10px 12px;
+      width: 100%;
+      font-family: inherit;
+    }
+    .filter-field--actions {
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .filter-field--actions .btn {
+      font-size: 13px;
+      padding: 10px 16px;
+    }
+    .table-shell {
+      margin-top: 24px;
+      border-radius: 18px;
+      overflow: auto;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: #ffffff;
+      box-shadow: 0 24px 50px rgba(15, 23, 42, 0.12);
+    }
+    .log-table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      color: #0f172a;
+    }
+    .log-table th {
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: rgba(15, 23, 42, 0.8);
+      background: rgba(11, 95, 83, 0.08);
+    }
+    .log-table th,
+    .log-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      text-align: left;
+    }
+    .log-table tbody tr:nth-child(even) {
+      background: rgba(11, 95, 83, 0.03);
+    }
+    .log-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .log-table td:nth-child(4) {
+      min-width: 220px;
+    }
+    .log-table td:nth-child(5) {
+      min-width: 120px;
+    }
+    .log-table td:nth-child(7) {
+      min-width: 200px;
+    }
+    @media (max-width: 900px) {
+      .log-table {
+        font-size: 12px;
+      }
+      .log-filters {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      }
+    }
+  </style>
+
+  <div class="hero">
+    <h2>Auditoria / Logs</h2>
+    <p>Registros de ações e mudanças de status (criação, edição, aprovação, retrabalho e cancelamento) apresentados como uma consulta SQL. Use os filtros para refinar o conjunto exibido.</p>
+  </div>
+
+  <div class="log-meta">
+    <strong>Exibindo {{ logs|length }} de {{ total_logs }} registros</strong>
+    <span>Limite de {{ display_limit }} linhas</span>
+    {% if filters_active %}
+      <span class="log-meta__pill">Filtros ativos</span>
+    {% endif %}
+  </div>
+
+  <form class="log-filters" method="get" aria-label="Filtros de auditoria">
+    <div class="filter-field">
+      <label for="filter-q">Buscar (ID, dispositivo, usuário ou comentário)</label>
+      <input id="filter-q" name="q" type="text" value="{{ filters.q }}" placeholder="Ex.: 20234, 0321, gustavo" />
+    </div>
+    <div class="filter-field">
+      <label for="filter-tipo">Tipo de log</label>
+      <select id="filter-tipo" name="tipo">
+        <option value="">Todos</option>
+        <option value="status" {% if filters.tipo == "status" %}selected{% endif %}>Status</option>
+        <option value="acao" {% if filters.tipo == "acao" %}selected{% endif %}>Ação</option>
+      </select>
+    </div>
+    <div class="filter-field">
+      <label for="filter-user">Usuário responsável</label>
+      <input id="filter-user" name="user" type="text" value="{{ filters.user }}" placeholder="login ou nome completo" />
+    </div>
+    <div class="filter-field">
+      <label for="filter-acao">Ação (auditoria)</label>
+      <input id="filter-acao" name="acao" type="text" value="{{ filters.acao }}" placeholder="Ex.: solicitante_abrir_solicitacao" />
+    </div>
+    <div class="filter-field">
+      <label for="filter-status">Status envolvido</label>
+      <select id="filter-status" name="status">
+        <option value="">Todos</option>
+        {% for value, label in status_options %}
+          <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-field">
+      <label for="filter-limit">Limite de linhas</label>
+      <input
+        id="filter-limit"
+        name="limit"
+        type="number"
+        min="10"
+        max="500"
+        value="{{ filters.limit }}"
+        aria-describedby="limit-help"
+      />
+      <small id="limit-help" style="display:block; margin-top:4px; color:rgba(15,23,42,.6); font-size:11px;">
+        Máximo 500 registros por requisição.
+      </small>
+    </div>
+    <div class="filter-field filter-field--actions">
+      <button class="btn" type="submit">Aplicar filtros</button>
+      <a class="btn btn-secondary" href="{% url 'admin_auditoria_logs' %}">Limpar filtros</a>
+    </div>
+  </form>
+
+  <div class="table-shell" role="region" aria-label="Registros de auditoria">
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Data / Hora</th>
+          <th scope="col">Usuário</th>
+          <th scope="col">Solicitação</th>
+          <th scope="col">Dispositivo</th>
+          <th scope="col">Status / Ação</th>
+          <th scope="col">Comentário</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+          <tr>
+            <td>{{ log.id }}</td>
+            <td>{{ log.criado_em|date:"d/m/Y H:i" }}</td>
+            <td>{{ log.usuario.get_full_name|default:log.usuario.username|default:"—" }}</td>
+            <td>{{ log.solicitacao|default:"—" }}</td>
+            <td>{{ log.dispositivo|default:"—" }}</td>
+            <td>
+              {% if log.status_de or log.status_para %}
+                {{ status_labels|dict_item:log.status_de|default:log.status_de }}
+                &rarr;
+                {{ status_labels|dict_item:log.status_para|default:log.status_para }}
+              {% else %}
+                {{ log.acao_label|default:"—" }}
+              {% endif %}
+            </td>
+            <td>{{ log.comentario|default:"—" }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" style="text-align:center; padding: 24px;">Nenhum registro encontrado para os filtros aplicados.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

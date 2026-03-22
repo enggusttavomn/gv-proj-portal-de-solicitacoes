@@ -1,0 +1,45 @@
+{% with current=request.resolver_match.url_name %}
+  <div class="navsec">Painel</div>
+  <nav class="nav">
+    <a class="{% if current == 'dashboard_admin' %}active{% endif %}"
+       href="{% url 'dashboard_admin' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-dashboard"></use></svg></div>Dashboard
+    </a>
+  </nav>
+
+  <div class="navsec">Operações</div>
+  <nav class="nav">
+    <a class="{% if current == 'admin_banco_de_dados' %}active{% endif %}"
+       href="{% url 'admin_banco_de_dados' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-database"></use></svg></div>Banco de dados
+    </a>
+    <a class="{% if current == 'admin_solicitantes' %}active{% endif %}"
+       href="{% url 'admin_solicitantes' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-users"></use></svg></div>Solicitantes
+    </a>
+    <a class="{% if current == 'admin_projetistas' %}active{% endif %}"
+       href="{% url 'admin_projetistas' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-pen"></use></svg></div>Projetistas
+    </a>
+    <a class="{% if current == 'admin_dispositivos' %}active{% endif %}"
+       href="{% url 'admin_dispositivos' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-device"></use></svg></div>Dispositivos
+    </a>
+  </nav>
+
+  <div class="navsec">Governança</div>
+  <nav class="nav">
+    <a class="{% if current == 'admin_configuracoes' %}active{% endif %}"
+       href="{% url 'admin_configuracoes' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-settings"></use></svg></div>Configurações
+    </a>
+    <a class="{% if current == 'admin_usuarios_permissoes' %}active{% endif %}"
+       href="{% url 'admin_usuarios_permissoes' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-shield"></use></svg></div>Usuários / Permissões
+    </a>
+    <a class="{% if current == 'admin_auditoria_logs' %}active{% endif %}"
+       href="{% url 'admin_auditoria_logs' %}">
+      <div class="ico"><svg aria-hidden="true"><use href="#ico-activity"></use></svg></div>Auditoria / Logs
+    </a>
+  </nav>
+{% endwith %}

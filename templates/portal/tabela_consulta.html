@@ -1,0 +1,134 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/tabela_consulta.html
+  Objetivo: Tela do portal: tabela consulta.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - Banco de dados{% endblock %}
+
+{% block sidebar %}
+  {# se quiser, depois eu coloco um sidebar_admin separado; por enquanto reaproveita o padrão do dashboard atual #}
+  <div class="navsec">ADMIN</div>
+  <nav class="nav">
+    <a href="{% url 'dashboard_admin' %}"><div class="ico"><svg aria-hidden="true"><use href="#ico-dashboard"></use></svg></div>Visão Geral</a>
+    <a href="{% url 'dashboard_solicitante' %}"><div class="ico"><svg aria-hidden="true"><use href="#ico-users"></use></svg></div>Solicitantes (todos)</a>
+    <a href="{% url 'dashboard_projetista' %}"><div class="ico"><svg aria-hidden="true"><use href="#ico-pen"></use></svg></div>Projetistas (todos)</a>
+    <a class="active" href="{% url 'tabela_consulta' %}"><div class="ico"><svg aria-hidden="true"><use href="#ico-database"></use></svg></div>Banco de dados</a>
+  </nav>
+{% endblock %}
+
+{% block content %}
+  <div class="hero">
+    <h2>Banco de dados</h2>
+    <p>Consulta rápida de registros (MVP). Depois ligamos nas tabelas reais e colocamos filtros avançados.</p>
+  </div>
+
+  <div class="grid">
+    <div class="tile">
+      <h3>Registros</h3>
+      <p>Total (placeholder).</p>
+      <div style="margin-top:10px; font-size:26px; font-weight:900; color:var(--green);">0</div>
+    </div>
+
+    <div class="tile">
+      <h3>Última atualização</h3>
+      <p>Placeholder.</p>
+      <div style="margin-top:10px; font-size:14px; font-weight:900;">—</div>
+    </div>
+
+    <div class="tile">
+      <h3>Status</h3>
+      <p>Conexão com banco.</p>
+      <div style="margin-top:10px; font-size:14px; font-weight:900;">Desconectado (MVP)</div>
+    </div>
+
+    <div class="tile" style="grid-column: span 12; padding:18px;">
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+        <div>
+          <h3 style="margin:0 0 6px;">Consulta</h3>
+          <p style="margin:0; color:var(--muted); font-size:13px;">Filtros e listagem (placeholder).</p>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <input class="inp" type="text" placeholder="Buscar por ID, JOB, nome, status..." style="min-width:300px; max-width:520px;">
+          <select class="inp" style="max-width:220px;">
+            <option>Todos</option>
+            <option>Abertos</option>
+            <option>Em andamento</option>
+            <option>Pendências</option>
+            <option>Concluídos</option>
+          </select>
+          <button class="btn-primary" type="button" style="padding:10px 14px; border-radius:12px;">Aplicar</button>
+        </div>
+      </div>
+
+      <div style="margin-top:14px; overflow:auto; border:1px solid rgba(17,24,39,.10); border-radius:14px;">
+        <table style="width:100%; border-collapse:collapse; background:rgba(255,255,255,.78); min-width:900px;">
+          <thead>
+            <tr style="text-align:left; font-size:13px; color:rgba(15,23,42,.75); background:rgba(15,23,42,.04);">
+              <th style="padding:12px 12px;">ID</th>
+              <th style="padding:12px 12px;">JOB</th>
+              <th style="padding:12px 12px;">Tipo</th>
+              <th style="padding:12px 12px;">Responsável</th>
+              <th style="padding:12px 12px;">Status</th>
+              <th style="padding:12px 12px;">Atualizado em</th>
+              <th style="padding:12px 12px;">Ação</th>
+            </tr>
+          </thead>
+          <tbody style="font-size:14px;">
+            <tr style="border-top:1px solid rgba(17,24,39,.08);">
+              <td style="padding:12px 12px; font-weight:800;">#0001</td>
+              <td style="padding:12px 12px;">JOB-12345</td>
+              <td style="padding:12px 12px;">Solicitação</td>
+              <td style="padding:12px 12px;">—</td>
+              <td style="padding:12px 12px;">
+                <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(11,95,83,.12); color:rgba(11,95,83,.95); font-weight:800;">
+                  Em andamento
+                </span>
+              </td>
+              <td style="padding:12px 12px;">—</td>
+              <td style="padding:12px 12px;">
+                <a href="#" style="text-decoration:none; font-weight:800; color:var(--green);">Abrir →</a>
+              </td>
+            </tr>
+
+            <tr style="border-top:1px solid rgba(17,24,39,.08);">
+              <td style="padding:12px 12px; font-weight:800;">#0002</td>
+              <td style="padding:12px 12px;">JOB-98765</td>
+              <td style="padding:12px 12px;">Dispositivos</td>
+              <td style="padding:12px 12px;">Rocha</td>
+              <td style="padding:12px 12px;">
+                <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(15,23,42,.08); color:rgba(15,23,42,.85); font-weight:900;">
+                  Pendências
+                </span>
+              </td>
+              <td style="padding:12px 12px;">—</td>
+              <td style="padding:12px 12px;">
+                <a href="#" style="text-decoration:none; font-weight:800; color:var(--green);">Abrir →</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <style>
+        .inp{
+          border-radius:12px;
+          border:1px solid rgba(17,24,39,.12);
+          background:rgba(255,255,255,.75);
+          padding:10px 12px;
+          outline:none;
+        }
+        .btn-primary{
+          border:none;
+          background: var(--green);
+          color:#fff;
+          font-weight:900;
+          cursor:pointer;
+        }
+      </style>
+    </div>
+  </div>
+{% endblock %}

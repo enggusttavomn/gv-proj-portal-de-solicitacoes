@@ -1,0 +1,203 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/retrabalho_solicitado.html
+  Objetivo: Tela do portal: retrabalho solicitado.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - Retrabalho solicitado{% endblock %}
+
+{% block sidebar %}
+  {% include "portal/_sidebar_projetista.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="hero">
+    <h2>Retrabalho solicitado</h2>
+    <p>Itens devolvidos com motivo. Corrija e devolva para aprovacao.</p>
+  </div>
+
+  <div class="grid">
+    <div class="tile status-tile" style="grid-column: span 12;">
+      <div class="status-filters">
+        <div class="status-filters__intro">
+          <h3>Itens para retrabalho</h3>
+          <p>Revise o motivo, ajuste o item e devolva para aprovacao.</p>
+        </div>
+      </div>
+
+      <div class="status-table-wrap">
+        <table class="status-table">
+          <thead class="status-table__head">
+            <tr>
+              <th>No GV PROJ</th>
+              <th>Secao</th>
+              <th>JOB</th>
+              <th>Motivo</th>
+              <th>Status</th>
+              <th>Acao</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if solicitacoes %}
+              {% for s in solicitacoes %}
+                <tr>
+                  <td class="gv-proj-id">{{ s.display_id }}</td>
+                  <td>
+                    {% if s.secao %}{{ s.secao }}{% elif s.area %}{{ s.area }}{% else %}-{% endif %}
+                  </td>
+                  <td>{{ s.job|default:"-" }}</td>
+                  <td class="status-motivo">{{ s.retrabalho_comentario|default:"-" }}</td>
+                  <td>
+                    <span class="status-pill {{ s.status_class }}">{{ s.status_label }}</span>
+                  </td>
+                  <td>
+                    <a class="action-link action-link--icon" href="{% url 'corrigir_retrabalho' %}?id={{ s.id }}">
+                      <span class="action-link__icon" aria-hidden="true">
+                        <svg aria-hidden="true"><use href="#ico-pen"></use></svg>
+                      </span>
+                      Corrigir
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6">
+                  <span class="status-empty">Nenhum retrabalho pendente.</span>
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="status-count">
+        Total: {{ solicitacoes|length }}
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .status-pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:12px;
+      white-space: nowrap;
+    }
+    .status-pill.pending{ background: rgba(11,95,83,.12); color: rgba(11,95,83,.95); }
+    .status-pill.warning{ background: rgba(15,23,42,.08); color: rgba(15,23,42,.85); }
+    .status-pill.rework{ background: rgba(183,211,75,.18); color: rgba(90,110,25,.95); }
+    .status-pill.ok{ background: rgba(11,95,83,.14); color: rgba(11,95,83,.95); }
+    .status-pill.danger{ background: rgba(244,63,94,.12); color: rgba(159,18,57,.95); }
+    .status-pill.muted{ background: rgba(15,23,42,.08); color: rgba(15,23,42,.65); }
+    .status-tile{
+      padding: 18px 18px 20px;
+      border: 1px solid rgba(15,23,42,.06);
+      box-shadow: 0 14px 30px rgba(15,23,42,.08);
+    }
+    .status-filters{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(15,23,42,.08);
+    }
+    .status-filters__intro h3{
+      margin: 0 0 6px;
+      font-size: 15px;
+    }
+    .status-filters__intro p{
+      margin:0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .status-table-wrap{
+      margin-top: 14px;
+      overflow: auto;
+      border: 1px solid rgba(17,24,39,.10);
+      border-radius: 16px;
+      background: rgba(255,255,255,.82);
+    }
+    .status-table{
+      width:100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 920px;
+    }
+    .status-table__head{
+      text-align:left;
+      font-size:13px;
+      color: #f8fafc;
+      background: linear-gradient(90deg, rgba(11,95,83,.95), rgba(9,86,74,.98));
+    }
+    .status-table th,
+    .status-table td{
+      padding: 12px 12px;
+    }
+    .status-table tbody tr{
+      border-top: 1px solid rgba(17,24,39,.08);
+    }
+    .status-table tbody tr:nth-child(even){
+      background: rgba(15,23,42,.02);
+    }
+    .gv-proj-id{
+      font-weight: 800;
+      color: rgba(15,23,42,.92);
+      white-space: nowrap;
+    }
+    .status-motivo{
+      color: var(--muted);
+      font-size:13px;
+    }
+    .status-empty{
+      color: var(--muted);
+    }
+    .status-count{
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .action-link{
+      text-decoration:none;
+      font-weight:800;
+      color:var(--green);
+      font-size:13px;
+    }
+    .action-link--icon{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.7);
+      box-shadow: 0 6px 14px rgba(15,23,42,.08);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .action-link--icon:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(15,23,42,.12);
+      border-color: rgba(11,95,83,.35);
+    }
+    .action-link__icon{
+      width:16px;
+      height:16px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color: var(--green);
+    }
+    .action-link__icon svg{
+      width:16px;
+      height:16px;
+      display:block;
+      stroke: currentColor;
+    }
+  </style>
+{% endblock %}

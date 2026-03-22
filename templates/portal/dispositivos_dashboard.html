@@ -1,0 +1,158 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/dispositivos_dashboard.html
+  Objetivo: Tela do portal: dispositivos dashboard.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+
+{% block title %}Painel de Dispositivos | GV_PROJ{% endblock %}
+
+{% block sidebar %}
+  {% include "portal/_sidebar_dispositivos.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="hero">
+    <h2>Painel de Dispositivos</h2>
+    <p>
+      Central de abertura, regularização e tratativas de dispositivos. (MVP)
+      <br>
+      Entrada típica: após o “Retorno final” do Solicitante.
+    </p>
+  </div>
+
+  <!-- Resumo visual (similar aos outros painéis) -->
+  <div style="margin-top:14px; background: rgba(255,255,255,.74); border: 1px solid var(--stroke); border-radius: 18px; padding: 16px; box-shadow: 0 12px 26px rgba(0,0,0,.08);">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+      <div>
+        <div style="font-weight:900; font-size:14px;">Resumo visual</div>
+        <div style="margin-top:4px; color: var(--muted); font-size: 13px;">
+          Distribuição do backlog por status (placeholder — depois ligamos no banco).
+        </div>
+      </div>
+
+      <div style="display:flex; gap:14px; font-size:13px; font-weight:900; white-space:nowrap; flex-wrap:wrap;">
+        <div>Abertos: <span id="kpiAbertos">{{ abertos_count|default:0 }}</span></div>
+        <div>Em andamento: <span id="kpiAndamento">{{ andamento_count|default:0 }}</span></div>
+        <div>Pendências: <span id="kpiPendencias">{{ pendencias_count|default:0 }}</span></div>
+      </div>
+    </div>
+
+    <div style="margin-top:10px; height:140px;">
+      <canvas id="dispositivosChart"></canvas>
+    </div>
+
+    <div style="margin-top:10px; color: var(--muted); font-size: 12px;">
+      Legenda: Abertos • Em andamento • Pendências
+    </div>
+  </div>
+
+  <!-- Indicadores por tipo (KPI por item do menu lateral) -->
+  <div style="margin-top:14px; display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+    <div style="font-weight:900;">Indicadores por tipo</div>
+    <div style="color: var(--muted); font-size: 12px;">
+      MVP: todos “0”. Depois você define com o chefe as regras de contagem por tipo.
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="tile">
+      <h3>01) Novo disp. Completo</h3>
+      <p>Abertura do zero (escopo completo).</p>
+      <div style="margin-top:10px; font-weight:900; font-size:22px;">{{ tipo_01|default:0 }}</div>
+    </div>
+
+    <div class="tile">
+      <h3>02) Novo disp. + parte retrabalhada</h3>
+      <p>Parte do dispositivo já existe e será refeita.</p>
+      <div style="margin-top:10px; font-weight:900; font-size:22px;">{{ tipo_02|default:0 }}</div>
+    </div>
+
+    <div class="tile">
+      <h3>03) Novo disp. + parte existente</h3>
+      <p>Reaproveita parte existente + complementa.</p>
+      <div style="margin-top:10px; font-weight:900; font-size:22px;">{{ tipo_03|default:0 }}</div>
+    </div>
+
+    <div class="tile">
+      <h3>04) Usar Projeto existente (Físico não existente)</h3>
+      <p>Projeto existe, mas o físico ainda não.</p>
+      <div style="margin-top:10px; font-weight:900; font-size:22px;">{{ tipo_04|default:0 }}</div>
+    </div>
+
+    <div class="tile">
+      <h3>05) Regularizar disp. fisicamente existente (ART)</h3>
+      <p>Regularização/documentação (ex.: ART).</p>
+      <div style="margin-top:10px; font-weight:900; font-size:22px;">{{ tipo_05|default:0 }}</div>
+    </div>
+
+    <div class="tile">
+      <h3>06) Retrabalhar disp. fisicamente existente</h3>
+      <p>Ajustes/retrabalho no físico existente.</p>
+      <div style="margin-top:10px; font-weight:900; font-size:22px;">{{ tipo_06|default:0 }}</div>
+    </div>
+
+    <div class="tile">
+      <h3>07) Usar disp. fisicamente existente regularizado</h3>
+      <p>Uso do dispositivo já regularizado.</p>
+      <div style="margin-top:10px; font-weight:900; font-size:22px;">{{ tipo_07|default:0 }}</div>
+    </div>
+
+    <div class="tile">
+      <h3>08) Cancelar FRNR</h3>
+      <p>Encerramento/cancelamento.</p>
+      <div style="margin-top:10px; font-weight:900; font-size:22px;">{{ tipo_08|default:0 }}</div>
+    </div>
+
+    <div class="tile">
+      <h3>09) Job Irmã</h3>
+      <p>Fluxo paralelo/relacionado.</p>
+      <div style="margin-top:10px; font-weight:900; font-size:22px;">{{ tipo_09|default:0 }}</div>
+    </div>
+
+    <div class="tile">
+      <h3>10) Fabricação Interna</h3>
+      <p>Tratativas de fabricação interna.</p>
+      <div style="margin-top:10px; font-weight:900; font-size:22px;">{{ tipo_10|default:0 }}</div>
+    </div>
+
+    <div class="tile">
+      <h3>11) Retrabalhar Projeto</h3>
+      <p>Revisão/ajuste no projeto.</p>
+      <div style="margin-top:10px; font-weight:900; font-size:22px;">{{ tipo_11|default:0 }}</div>
+    </div>
+  </div>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    (function(){
+      const abertos = Number("{{ abertos_count|default:0 }}");
+      const andamento = Number("{{ andamento_count|default:0 }}");
+      const pendencias = Number("{{ pendencias_count|default:0 }}");
+
+      const el = document.getElementById("dispositivosChart");
+      if(!el || !window.Chart) return;
+
+      new Chart(el, {
+        type: "bar",
+        data: {
+          labels: ["Abertos", "Em andamento", "Pendências"],
+          datasets: [{
+            label: "Itens",
+            data: [abertos, andamento, pendencias],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+    })();
+  </script>
+{% endblock %}

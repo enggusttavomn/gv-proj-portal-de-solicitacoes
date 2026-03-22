@@ -1,0 +1,333 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/fila_trabalho.html
+  Objetivo: Tela do portal: fila trabalho.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - Controle de projetos{% endblock %}
+
+{% block sidebar %}
+  {% include "portal/_sidebar_projetista.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="hero">
+    <div class="hero-head">
+      <div class="hero-main">
+        <h2>Controle de projetos</h2>
+        <p>Solicitacoes aguardando preenchimento.</p>
+      </div>
+      <div class="hero-kpi">
+        <div class="hero-kpi-label">Em fila</div>
+        <div class="hero-kpi-value">{{ solicitacoes|length }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="tile status-tile" style="grid-column: span 12;">
+      <form method="get" class="status-filters">
+        <div class="status-filters__intro">
+          <h3>Filtros</h3>
+          <p>Use os filtros para localizar solicitacoes na fila.</p>
+        </div>
+
+        <div class="status-filters__controls">
+          <input
+            type="text"
+            name="q"
+            value="{{ request.GET.q }}"
+            placeholder="Buscar por N&ordm; GV PROJ, sufixo, status..."
+            class="status-input"
+          />
+          <select name="status" class="status-select">
+            <option value="" {% if not request.GET.status %}selected{% endif %}>Todos</option>
+            <option value="aguardando_projetista" {% if request.GET.status == "aguardando_projetista" %}selected{% endif %}>Fila</option>
+            <option value="em_preenchimento" {% if request.GET.status == "em_preenchimento" %}selected{% endif %}>Em preenchimento</option>
+            <option value="retrabalho" {% if request.GET.status == "retrabalho" %}selected{% endif %}>Retrabalho</option>
+          </select>
+          <button type="submit" class="status-apply">Aplicar</button>
+        </div>
+      </form>
+
+      <div class="status-table-wrap">
+        <table class="status-table">
+          <thead class="status-table__head">
+            <tr>
+              <th>N&ordm; GV PROJ</th>
+              <th>Solicitante</th>
+              <th>Sufixo</th>
+              <th>Descricao</th>
+              <th>Qtde</th>
+              <th>Baseline Projeto</th>
+              <th>Baseline Producao</th>
+              <th>Status</th>
+              <th class="status-actions-col" scope="col">Preencher solicitacao</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if solicitacoes %}
+              {% for s in solicitacoes %}
+                <tr>
+                  <td class="gv-proj-id">{{ s.display_id }}</td>
+                  <td>{{ s.criado_por.get_full_name|default:s.criado_por.username|default:"-" }}</td>
+                  <td>{{ s.sufixo|default:"-" }}</td>
+                  <td>{{ s.descricao|default:s.titulo|default:"Solicitacao" }}</td>
+                  <td>{{ s.quantidade|default:"-" }}</td>
+                  <td>{% if s.baseline_ame %}{{ s.baseline_ame|date:"d/m/Y" }}{% else %}-{% endif %}</td>
+                  <td>{% if s.baseline_producao %}{{ s.baseline_producao|date:"d/m/Y" }}{% else %}-{% endif %}</td>
+                  <td>
+                    <span class="status-pill {{ s.status_class }}">{{ s.status_label }}</span>
+                  </td>
+                  <td class="status-actions-col">
+                    <a
+                      class="action-link action-link--icon"
+                      href="{% url 'preencher_solicitacao' %}?id={{ s.id }}"
+                      title="Preencher solicitação"
+                      aria-label="Preencher solicitação"
+                    >
+                      <span class="action-link__icon" aria-hidden="true">
+                        <svg aria-hidden="true"><use href="#ico-pen"></use></svg>
+                      </span>
+                      <span class="sr-only">Preencher solicitação</span>
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="9">
+                  <span class="status-empty">Nenhuma solicitacao na fila.</span>
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="status-count">
+        Total: {{ solicitacoes|length }}
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .hero{
+      padding: 26px 28px;
+      border-radius: 28px;
+      background: linear-gradient(120deg, rgba(11,95,83,.95), rgba(9,86,74,.98));
+      box-shadow: 0 22px 40px rgba(15,23,42,.3);
+      color: #fff;
+      margin-bottom: 20px;
+    }
+    .hero-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .hero-main{ min-width:0; }
+    .hero-main h2{
+      margin:0;
+      font-size:32px;
+      font-weight:700;
+    }
+    .hero-main p{
+      margin:6px 0 0;
+      color: rgba(255,255,255,.9);
+      font-size:14px;
+    }
+    .hero-kpi{
+      border:1px solid rgba(255,255,255,.24);
+      background: rgba(255,255,255,.12);
+      border-radius:16px;
+      padding:10px 14px;
+      min-width:120px;
+      text-align:right;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+    }
+    .hero-kpi-label{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-weight:800;
+      opacity:.85;
+    }
+    .hero-kpi-value{
+      font-size:26px;
+      font-weight:900;
+      line-height:1;
+      margin-top:6px;
+    }
+    @media (max-width: 720px){
+      .hero-head{ flex-direction:column; align-items:flex-start; }
+      .hero-kpi{ text-align:left; width:100%; }
+    }
+    .status-pill{
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:12px;
+    }
+    .status-pill.pending{ background: rgba(11,95,83,.12); color: rgba(11,95,83,.95); }
+    .status-pill.warning{ background: rgba(15,23,42,.08); color: rgba(15,23,42,.85); }
+    .status-pill.rework{ background: rgba(183,211,75,.18); color: rgba(90,110,25,.95); }
+    .status-pill.ok{ background: rgba(11,95,83,.14); color: rgba(11,95,83,.95); }
+    .status-pill.danger{ background: rgba(244,63,94,.12); color: rgba(159,18,57,.95); }
+    .status-pill.muted{ background: rgba(15,23,42,.08); color: rgba(15,23,42,.65); }
+    .status-tile{
+      padding: 18px 18px 20px;
+      border: 1px solid rgba(15,23,42,.06);
+      box-shadow: 0 14px 30px rgba(15,23,42,.08);
+    }
+    .status-filters{
+      display:flex;
+      gap:14px;
+      flex-wrap:nowrap;
+      align-items:center;
+      justify-content:space-between;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(15,23,42,.08);
+    }
+    .status-filters__intro h3{
+      margin: 0 0 6px;
+      font-size: 15px;
+    }
+    .status-filters__intro p{
+      margin:0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .status-filters__controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:nowrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .status-input,
+    .status-select{
+      min-width: 240px;
+      padding:10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.85);
+      outline: none;
+      font-size: 13px;
+    }
+    .status-select{
+      min-width: 190px;
+    }
+    .status-input:focus,
+    .status-select:focus{
+      border-color: rgba(11,95,83,.45);
+      box-shadow: 0 0 0 3px rgba(11,95,83,.15);
+    }
+    .status-apply{
+      padding:10px 16px;
+      border-radius: 12px;
+      border:1px solid rgba(17,24,39,.12);
+      background: var(--green);
+      color:white;
+      font-weight:800;
+      cursor:pointer;
+      letter-spacing:.01em;
+      box-shadow: 0 10px 18px rgba(11,95,83,.22);
+    }
+    .status-table-wrap{
+      margin-top: 14px;
+      overflow: auto;
+      border: 1px solid rgba(17,24,39,.10);
+      border-radius: 16px;
+      background: rgba(255,255,255,.82);
+    }
+    .status-table{
+      width:100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 1020px;
+    }
+    .status-table__head{
+      text-align:left;
+      font-size:13px;
+      color: #f8fafc;
+      background: linear-gradient(90deg, rgba(11,95,83,.95), rgba(9,86,74,.98));
+    }
+    .status-table th,
+    .status-table td{
+      padding: 12px 12px;
+    }
+    .status-table tbody tr{
+      border-top: 1px solid rgba(17,24,39,.08);
+    }
+    .status-table tbody tr:nth-child(even){
+      background: rgba(15,23,42,.02);
+    }
+    .gv-proj-id{
+      font-weight: 800;
+      color: rgba(15,23,42,.92);
+      white-space: nowrap;
+    }
+    .action-link{
+      text-decoration:none;
+      font-weight:800;
+      color:var(--green);
+      font-size:13px;
+    }
+    .action-link--icon-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:4px 12px;
+      border-radius:999px;
+      border:1px solid rgba(11,95,83,.2);
+      background: #fff;
+      color: #0b5a4c;
+      box-shadow: 0 6px 14px rgba(11,95,83,.18);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .action-link--icon-pill:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(11,95,83,.12);
+    }
+    .action-link__icon{
+      width:20px;
+      height:20px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .action-link__icon svg{
+      width:18px;
+      height:18px;
+      display:block;
+    }
+    .status-empty{
+      color: var(--muted);
+    }
+    .status-count{
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+      .status-actions-col{
+      text-align:center;
+      width:72px;
+      white-space:nowrap;
+    }
+    .sr-only{
+      position:absolute;
+      width:1px;
+      height:1px;
+      padding:0;
+      margin:-1px;
+      overflow:hidden;
+      clip:rect(0,0,0,0);
+      white-space:nowrap;
+      border:0;
+    }
+</style>
+{% endblock %}

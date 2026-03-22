@@ -1,0 +1,69 @@
+{% load static %}
+{#
+  Template: templates/portal/base_portal.html
+  Objetivo: Tela do portal: base portal.
+  Herda: n?o aplica (template base ou p?gina completa).
+  Blocos: content, nav, page_title, role, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}Painel de Controle{% endblock %} • GV_PROJ</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+
+<body class="panel-shell">
+  <img class="ge-logo-bg ge-logo-bg--panel" src="{% static 'img/ge_vernova.png' %}" alt="GE Vernova">
+
+  <aside class="panel-sidebar">
+    <div class="panel-brand">
+      <div class="panel-brand__icon brand-mark" aria-hidden="true">GEVERNOVA PROJ</div>
+      <div class="panel-brand__text">
+        <div class="panel-brand__name">GV_PROJ</div>
+        <div class="panel-brand__sub">{% block role %}{% endblock %}</div>
+      </div>
+    </div>
+
+    <nav class="panel-nav">
+      {% block nav %}{% endblock %}
+    </nav>
+
+    <div class="panel-sidebar__footer">
+      <div class="panel-user">
+        <div class="panel-user__dot"></div>
+        <div class="panel-user__name">{{ request.user.get_full_name|default:request.user.username }}</div>
+      </div>
+
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="panel-btn panel-btn--ghost" type="submit">Sair</button>
+      </form>
+    </div>
+  </aside>
+
+  <div class="panel-main">
+    <header class="panel-topbar">
+      <div class="panel-title">
+        <div class="panel-title__kicker">Painel de Controle</div>
+        <div class="panel-title__page">{% block page_title %}{% endblock %}</div>
+      </div>
+
+      <div class="panel-topbar__right">
+        <div class="panel-search">
+          <span class="panel-search__icon">⌕</span>
+          <input class="panel-search__input" placeholder="Buscar (Ctrl+E)" />
+        </div>
+      </div>
+    </header>
+
+    <main class="panel-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>
+
+

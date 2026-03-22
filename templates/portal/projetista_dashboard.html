@@ -1,0 +1,22 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/projetista_dashboard.html
+  Objetivo: Tela do portal: projetista dashboard.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observação: este arquivo é um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - Projetista{% endblock %}
+
+{% block sidebar %}
+  {% include "portal/_sidebar_projetista.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="hero">
+    <h2>Bem-vindo ao seu painel do projetista, {{ request.user.get_full_name|default:request.user.get_username }}</h2>
+    <p>Indicadores rápidos para acompanhar sua fila, entregas e pendências.</p>
+  </div>
+
+  {% include "portal/_projetista_dashboard_body.html" %}
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base_app.html" %}
+{#
+  Template: templates/portal/disp_usar_disp_existente_regularizado.html
+  Objetivo: Tela do portal: disp usar disp existente regularizado.
+  Herda: base_app.html.
+  Blocos: content, sidebar, title.
+  Observa??o: este arquivo ? um template Django e depende do contexto fornecido pela view.
+#}
+{% block title %}GV_PROJ - Usar disp. regularizado{% endblock %}
+{% block sidebar %}{% include "portal/_sidebar_dispositivos.html" %}{% endblock %}
+{% block content %}
+  <div class="hero">
+    <h2>Usar disp. fisicamente existente regularizado</h2>
+    <p>Seleção e vinculação de um dispositivo já regularizado.</p>
+  </div>
+  {% if ok %}<div class="tile" style="border:1px solid rgba(11,95,83,.25); background:rgba(11,95,83,.06);"><b>Enviado (placeholder).</b></div>{% endif %}
+  {% include "portal/_disp_form_base.html" with tipo="Usar disp. regularizado" %}
+{% endblock %}
