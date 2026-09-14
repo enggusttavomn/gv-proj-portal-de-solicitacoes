@@ -1,4 +1,4 @@
-﻿"""
+"""
 Configurações do Django para o projeto "config".
 Gerado por 'django-admin startproject' usando Django 6.0.
 """
@@ -8,8 +8,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # âš ï¸ DEV ONLY
-# Mantive uma SECRET_KEY "fixa" sÃ³ pra nÃ£o quebrar sessÃ£o toda hora.
-# Em produÃ§Ã£o, isso vai para variÃ¡vel de ambiente (.env).
+# Mantive uma SECRET_KEY "fixa" só pra não quebrar sessão toda hora.
+# Em produção, isso vai para variável de ambiente (.env).
 SECRET_KEY = "django-insecure-GV_PROJ-portal-dev-keep-this-fixed"
 
 DEBUG = True
